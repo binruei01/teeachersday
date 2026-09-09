@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="utf-8">
+  <title>教師節生圖活動：老師的一天</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body { background-color: #f4f7f6; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    .card { border-radius: 16px; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px; }
+    .btn-mic { background-color: #ff4757; color: white; border: none; border-radius: 50%; width: 38px; height: 38px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer; }
+    .btn-mic.recording { animation: pulse 1.2s infinite; background-color: #2ed573; }
+    @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.15); } 100% { transform: scale(1); } }
+    .badge-step { background-color: #4a90e2; color: white; border-radius: 8px; padding: 4px 10px; font-size: 0.9rem; }
+    .photo-tip { background-color: #e8f4fd; border-left: 4px solid #3498db; padding: 12px; border-radius: 8px; font-size: 0.95rem; }
+    .panel-card { border-left: 5px solid #4a90e2; }
+  </style>
+</head>
+<body class="p-3 p-md-4">
+<div class="container" style="max-width: 720px;">
+  <div class="text-center mb-4">
+    <h3 class="fw-bold">📸 老師的一天：AI 繪圖分鏡日記</h3>
+    <p class="text-muted">拍下老師的照片，記錄老師 1～6 幕的精采時光！</p>
+  </div>
+
+  <div id="loadingIndicator" class="text-center py-5">
+    <div class="spinner-border text-primary" role="status"></div>
+    <div class="mt-2 text-muted fw-bold">正在讀取試算表中的精選工作清單...</div>
+  </div>
+
+  <form id="observerForm" class="d-none">
+    <div class="card p-3 p-md-4">
+      <div class="mb-2"><span class="badge-step">任務一</span> <strong class="ms-2">替老師拍一張帥氣/美麗的照片！</strong></div>
+      <div class="photo-tip mt-2">
+        💡 <strong>小記者提醒：</strong> 請先用平板或手機幫老師拍一張<strong>清楚的正臉或半身照</strong>。等一下生圖時，將這張照片上傳給 AI 當作主角範本！
+      </div>
+    </div>
+
+    <div class="card p-3 p-md-4">
+      <div class="mb-3"><span class="badge-step">任務二</span> <strong class="ms-2">你想記錄老師一天的幾幕故事分鏡？</strong></div>
+      <div class="d-flex flex-wrap gap-2" id="sceneCountBtnGroup">
+        <button type="button" class="btn btn-outline-primary fw-bold" onclick="setPanelCount(1)">1 幕（單幅精彩）</button>
+        <button type="button" class="btn btn-primary fw-bold" onclick="setPanelCount(2)">2 幕</button>
+        <button type="button" class="btn btn-outline-primary fw-bold" onclick="setPanelCount(3)">3 幕</button>
+        <button type="button" class="btn btn-outline-primary fw-bold" onclick="setPanelCount(4)">4 幕（四格漫畫）</button>
+        <button type="button" class="btn btn-outline-primary fw-bold" onclick="setPanelCount(5)">5 幕</button>
+        <button type="button" class="btn btn-outline-primary fw-bold" onclick="setPanelCount(6)">6 幕（全日紀錄）</button>
+      </div>
+      <small class="text-muted mt-2 d-block">👉 點擊切換，下方會自動調整對應的填寫卡片。</small>
+    </div>
+
+    <div id="scenesContainer"></div>
+
+    <button type="button" class="btn btn-primary btn-lg w-100 fw-bold py-3 shadow-sm mb-4" onclick="generatePromptClientSide()">✨ 點擊生成「圖生圖」專用提示詞</button>
+
+    <div class="card p-3 p-md-4 d-none" id="resultCard">
+      <h5 class="fw-bold text-success mb-2">🎉 圖生圖 Prompt 組裝完成！</h5>
+      <p class="text-muted small">請點擊下方複製，並將剛剛拍的<strong>老師照片</strong>與這段提示詞一起上傳生圖：</p>
+      <textarea class="form-control mb-3" id="promptResult" rows="7" readonly></textarea>
+      <button type="button" class="btn btn-outline-success w-100 fw-bold" onclick="copyPrompt()">📋 一鍵複製提示詞</button>
+    </div>
+  </form>
+</div>
+
+<script>
+  // ⚠️ 請換成您發布的 GAS /exec 網址
+  const GAS_API_URL = "https://script.google.com/macros/s/AKfycbxiR3qFFEMmOHEqkVfeBzCs6cK7UvSNaGYNt5uRGX4-qMnnZ0KTnlseengIsZMV8Ldc/exec";
+
+  let cachedOptions = null;
+  let currentPanelCount = 2;
+
+  const defaultPeriodNames = [
+    "第 1 幕（晨光與早自習）",
+    "第 2 幕（上午主科課堂）",
+    "第 3 幕（大下課活動）",
+    "第 4 幕（午餐與午休靜謐）",
+    "第 5 幕（下午藝能活動）",
+    "第 6 幕（放學打掃與賦歸）"
+  ];
+
+  window.onload = function() {
+    fetch(GAS_API_URL)
+      .then(res => res.json())
+      .then(data => {
+        cachedOptions = data;
+        document.getElementById('loadingIndicator').classList.add('d-none');
+        document.getElementById('observerForm').classList.remove('d-none');
+        renderSceneCards(currentPanelCount);
+      })
+      .catch(err => {
+        alert('無法連線試算表資料，請確認 GAS 網址與權限已設為「所有人」！');
+      });
+  };
+
+  function setPanelCount(num) {
+    currentPanelCount = num;
+    const buttons = document.querySelectorAll('#sceneCountBtnGroup button');
+    buttons.forEach((btn, idx) => {
+      btn.className = (idx + 1 === num) ? "btn btn-primary fw-bold" : "btn btn-outline-primary fw-bold";
+    });
+    renderSceneCards(num);
+  }
+
+  function renderSceneCards(count) {
+    const container = document.getElementById('scenesContainer');
+    container.innerHTML = '';
+
+    for (let i = 1; i <= count; i++) {
+      const card = document.createElement('div');
+      card.className = 'card p-3 p-md-4 panel-card';
+      const title = defaultPeriodNames[i - 1] || `第 ${i} 幕`;
+
+      card.innerHTML = `
+        <h6 class="fw-bold text-primary mb-3">📍 ${title}</h6>
+        <div class="mb-3">
+          <label class="form-label small fw-bold">上課地點：</label>
+          <select class="form-select" id="place_${i}"></select>
+        </div>
+        <div class="mb-3">
+          <label class="form-label small fw-bold">老師正在忙什麼：</label>
+          <div class="input-group">
+            <select class="form-select" id="action_select_${i}" onchange="handleSelectChange('action_select_${i}', 'action_${i}')"></select>
+            <button type="button" class="btn btn-mic ms-2" onclick="startSpeech('action_${i}', this)">🎤</button>
+          </div>
+          <input type="text" class="form-control mt-2" id="action_${i}" placeholder="可選上方選項，或按麥克風語音輸入">
+        </div>
+        <div class="mb-2">
+          <label class="form-label small fw-bold">老師這時候常說的話：</label>
+          <div class="input-group">
+            <select class="form-select" id="quote_select_${i}" onchange="handleSelectChange('quote_select_${i}', 'quote_${i}')"></select>
+            <button type="button" class="btn btn-mic ms-2" onclick="startSpeech('quote_${i}', this)">🎤</button>
+          </div>
+          <input type="text" class="form-control mt-2" id="quote_${i}" placeholder="老師的口頭禪或暖心叮嚀">
+        </div>
+      `;
+      container.appendChild(card);
+
+      fillSelect(`place_${i}`, cachedOptions.places, false);
+      fillSelect(`action_select_${i}`, cachedOptions.actions, true);
+      fillSelect(`quote_select_${i}`, cachedOptions.quotes, true);
+
+      const defaultIdx = (i - 1) % cachedOptions.actions.length;
+      document.getElementById(`action_${i}`).value = cachedOptions.actions[defaultIdx] || '';
+      document.getElementById(`quote_${i}`).value = cachedOptions.quotes[defaultIdx] || '';
+    }
+  }
+
+  function fillSelect(elementId, items, allowCustom) {
+    const el = document.getElementById(elementId);
+    if (!el) return;
+    el.innerHTML = '';
+    items.forEach(item => {
+      const opt = document.createElement('option');
+      opt.value = item;
+      opt.textContent = item;
+      el.appendChild(opt);
+    });
+    if (allowCustom) {
+      const customOpt = document.createElement('option');
+      customOpt.value = 'custom';
+      customOpt.textContent = '👉 點此自行語音輸入/打字...';
+      el.appendChild(customOpt);
+    }
+  }
+
+  function handleSelectChange(selectId, inputId) {
+    const val = document.getElementById(selectId).value;
+    const input = document.getElementById(inputId);
+    if (val !== 'custom') {
+      input.value = val;
+    } else {
+      input.value = '';
+      input.focus();
+    }
+  }
+
+  // 獨立網域原生支援：麥克風 100% 正常運作
+  function startSpeech(targetInputId, btnElement) {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert('您的瀏覽器未支援語音辨識功能，請使用 Google Chrome 開啟！');
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'zh-TW';
+    recognition.continuous = false;
+    recognition.interimResults = false;
+
+    btnElement.classList.add('recording');
+
+    recognition.onresult = function(event) {
+      if (event.results && event.results.length > 0) {
+        const transcript = event.results[0][0].transcript;
+        const input = document.getElementById(targetInputId);
+        if (input) {
+          input.value = input.value ? input.value + ' ' + transcript : transcript;
+        }
+      }
+    };
+
+    recognition.onerror = function(event) {
+      btnElement.classList.remove('recording');
+      if (event.error === 'not-allowed') {
+        alert('請在彈窗中允許麥克風權限！');
+      }
+    };
+
+    recognition.onend = function() {
+      btnElement.classList.remove('recording');
+    };
+
+    recognition.start();
+  }
+
+  function generatePromptClientSide() {
+    const baseCharacter = `Transform the real person in the uploaded reference photo into a charming 3D Pixar Disney animated character, maintaining exact facial resemblance, hairstyle, and warm smile.`;
+
+    let formatDesc = (currentPanelCount === 1) 
+      ? "A single heartwarming featured snapshot capturing a special moment of this teacher:"
+      : `A ${currentPanelCount}-panel sequential comic strip story layout showing a full day in the life of this teacher:`;
+
+    let sceneDescriptions = [];
+    for (let i = 1; i <= currentPanelCount; i++) {
+      const place = document.getElementById(`place_${i}`).value;
+      const action = document.getElementById(`action_${i}`).value;
+      const quote = document.getElementById(`quote_${i}`).value;
+      sceneDescriptions.push(`Panel ${i}: At ${place}, the teacher is ${action}, with an encouraging and caring expression inspired by: "${quote}".`);
+    }
+
+    const styleTail = `Warm Pixar 3D animation style, Disney aesthetic, rich classroom lighting, vivid heartwarming atmosphere, highly detailed characters, soft volumetric lighting, 8k resolution.`;
+
+    const finalPrompt = `${baseCharacter} ${formatDesc} ${sceneDescriptions.join(' ')} ${styleTail}`;
+    document.getElementById('promptResult').value = finalPrompt;
+    document.getElementById('resultCard').classList.remove('d-none');
+    document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  function copyPrompt() {
+    const copyText = document.getElementById('promptResult');
+    copyText.select();
+    document.execCommand('copy');
+    alert('提示詞複製成功！');
+  }
+</script>
+</body>
+</html>
