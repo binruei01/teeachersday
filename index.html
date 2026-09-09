@@ -213,29 +213,69 @@
     recognition.start();
   }
 
-  function generatePromptClientSide() {
-    const baseCharacter = `Transform the real person in the uploaded reference photo into a charming 3D Pixar Disney animated character, maintaining exact facial resemblance, hairstyle, and warm smile.`;
+  // 智慧語意修正字典（將台灣校園特色精準轉為 AI 聽得懂的具象英文）
+function sanitizeScenePrompt(place, action, quote) {
+  let p = place;
+  let a = action;
 
-    let formatDesc = (currentPanelCount === 1) 
-      ? "A single heartwarming featured snapshot capturing a special moment of this teacher:"
-      : `A ${currentPanelCount}-panel sequential comic strip story layout showing a full day in the life of this teacher:`;
-
-    let sceneDescriptions = [];
-    for (let i = 1; i <= currentPanelCount; i++) {
-      const place = document.getElementById(`place_${i}`).value;
-      const action = document.getElementById(`action_${i}`).value;
-      const quote = document.getElementById(`quote_${i}`).value;
-      sceneDescriptions.push(`Panel ${i}: At ${place}, the teacher is ${action}, with an encouraging and caring expression inspired by: "${quote}".`);
-    }
-
-    const styleTail = `Warm Pixar 3D animation style, Disney aesthetic, rich classroom lighting, vivid heartwarming atmosphere, highly detailed characters, soft volumetric lighting, 8k resolution.`;
-
-    const finalPrompt = `${baseCharacter} ${formatDesc} ${sceneDescriptions.join(' ')} ${styleTail}`;
-    document.getElementById('promptResult').value = finalPrompt;
-    document.getElementById('resultCard').classList.remove('d-none');
-    document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth' });
+  // 1. 修正洗手台（避免畫成廚房流理台或地板拖把槽）
+  if (p.includes("洗手台") || a.includes("洗手")) {
+    p = "an open-air elementary school corridor with an outdoor multi-faucet tiled washbasin trough at kid waist-height, water taps in a row";
+    a = a.replace(/洗手台/g, "waist-height outdoor washbasin").replace(/洗手/g, "washing hands under running tap water");
   }
 
+  // 2. 修正聯絡簿 / 批改作業（避免畫成厚電話簿）
+  if (p.includes("辦公桌") || a.includes("聯絡簿") || a.includes("作業") || a.includes("生字")) {
+    a = a.replace(/聯絡簿|作業|生字本/g, "open student exercise notebook with red pen checkmarks and cute star grading stamps");
+  }
+
+  // 3. 修正眼神與視線方向（強迫視線聚焦在學生或課本上）
+  let gazeConstraint = "";
+  if (a.includes("指導") || a.includes("解答") || a.includes("看著") || a.includes("身邊") || a.includes("回答")) {
+    gazeConstraint = "eye contact locked attentively onto the young elementary student, head tilted gently downward, engaging warmly";
+  } else if (a.includes("批改") || a.includes("備課") || a.includes("寫")) {
+    gazeConstraint = "eyes focused intently down on the open notebook on the table, holding a red ballpoint pen";
+  } else if (a.includes("大螢幕") || a.includes("黑板")) {
+    gazeConstraint = "pointing hand toward the chalkboard, turning face sideways smiling toward seated elementary students";
+  } else {
+    gazeConstraint = "natural candid warm eye expression, interacting authentically with surrounding school children";
+  }
+
+  return { place: p, action: a, gaze: gazeConstraint };
+}
+
+// 升級版提示詞組裝
+function generatePromptClientSide() {
+  // 嚴格特徵錨定（特別防堵自動亂加眼鏡、維持長相一致）
+  const baseCharacter = `High-fidelity 3D Pixar character render directly based on the uploaded reference photo person: maintain exact real-life face structure, actual haircut, true age, and genuine facial expression. STRICT NEGATIVE CONSTRAINT: DO NOT ADD EYEGLASSES unless explicitly worn in the reference photo; strictly preserve natural bare eyes and authentic facial features without generic AI distortions.`;
+
+  let formatDesc = (currentPanelCount === 1) 
+    ? "A single heartwarming cinematic story snapshot of this elementary school teacher:"
+    : `A clean ${currentPanelCount}-panel comic storyboard sequence depicting a day in the life of this teacher:`;
+
+  let sceneDescriptions = [];
+  for (let i = 1; i <= currentPanelCount; i++) {
+    const rawPlace = document.getElementById(`place_${i}`).value;
+    const rawAction = document.getElementById(`action_${i}`).value;
+    const quote = document.getElementById(`quote_${i}`).value;
+
+    // 經由字典濾鏡精準重塑場景
+    const clean = sanitizeScenePrompt(rawPlace, rawAction, quote);
+
+    sceneDescriptions.push(
+      `Panel ${i}: Setting is ${clean.place}. The teacher is actively ${clean.action}. Facial emotion and composition: ${clean.gaze}, portraying the caring warm emotion: "${quote}".`
+    );
+  }
+
+  // 鎖定構圖細節，去除怪異解剖與假道具
+  const styleTail = `Authentic Taiwanese elementary school environment, natural warm daylight, cinematic depth of field, Pixar Disney 3D animation style, expressive Pixar eyes, highly detailed textures on wooden desks and notebooks, 8k resolution, photorealistic volumetric lighting, perfectly rendered human hands and realistic gestures.`;
+
+  const finalPrompt = `${baseCharacter} ${formatDesc} ${sceneDescriptions.join(' ')} ${styleTail}`;
+  
+  document.getElementById('promptResult').value = finalPrompt;
+  document.getElementById('resultCard').classList.remove('d-none');
+  document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth' });
+}
   function copyPrompt() {
     const copyText = document.getElementById('promptResult');
     copyText.select();
