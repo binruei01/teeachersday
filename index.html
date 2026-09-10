@@ -75,37 +75,6 @@
       letter-spacing: 0.5px;
     }
 
-    .photo-upload-zone {
-      border: 2px dashed #90caf9;
-      background: #f8fbff;
-      border-radius: var(--border-radius-md);
-      padding: 20px;
-      text-align: center;
-      cursor: pointer;
-      transition: all 0.25s ease;
-    }
-    .photo-upload-zone:hover {
-      border-color: var(--primary-color);
-      background: #f0f7ff;
-    }
-
-    .photo-preview-box {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      background: #ffffff;
-      padding: 12px 16px;
-      border-radius: var(--border-radius-md);
-      border: 1px solid #e2e8f0;
-    }
-    .photo-preview-img {
-      width: 72px;
-      height: 72px;
-      object-fit: cover;
-      border-radius: 10px;
-      border: 2px solid #1e5bb8;
-    }
-
     .panel-count-btn {
       border-radius: 12px;
       padding: 10px 16px;
@@ -138,7 +107,7 @@
     .attire-pill {
       font-size: 0.78rem;
       font-weight: 600;
-      padding: 3px 10px;
+      padding: 4px 12px;
       border-radius: 20px;
       display: inline-flex;
       align-items: center;
@@ -204,22 +173,22 @@
       transition: transform 0.15s ease, background-color 0.2s ease;
     }
     .copy-btn:active {
-      transform: scale(0.97);
+      transform: scale(0.98);
     }
 
     .tip-box {
       border-radius: 12px;
       background: #f0f7ff;
       border-left: 4px solid #1e5bb8;
-      padding: 12px 16px;
-      font-size: 0.9rem;
+      padding: 14px 18px;
+      font-size: 0.92rem;
     }
 
     .rule-tag {
-      font-size: 0.75rem;
+      font-size: 0.76rem;
       background: #f1f5f9;
       color: #475569;
-      padding: 2px 8px;
+      padding: 3px 10px;
       border-radius: 6px;
     }
   </style>
@@ -239,56 +208,33 @@
     </div>
     <h1 class="hero-title">老師的一天：AI 繪圖分鏡日記</h1>
     <p class="hero-subtitle">
-      拍下老師親切身影，以<strong>學生第一人稱視角</strong>記錄老師在校園的精采分鏡！
+      記錄老師在校園的辛勞身影，以<strong>學生第一人稱視角</strong>組裝出精緻細膩的生圖提示詞！
     </p>
   </header>
 
   <form id="observerForm" onsubmit="event.preventDefault();">
-    <!-- 任務一：老師照片準備 -->
+    <!-- 步驟一：拍照小提醒（網站不需上傳照片，生圖時才需提供） -->
     <div class="main-card p-4">
-      <div class="d-flex justify-content-between align-items-center mb-3">
-        <div class="d-flex align-items-center gap-2">
-          <span class="task-badge"><i class="bi bi-camera-fill"></i> 任務一</span>
-          <h5 class="fw-bold mb-0">準備老師的帥氣 / 美麗主角照片</h5>
-        </div>
+      <div class="d-flex align-items-center gap-2 mb-2">
+        <span class="task-badge"><i class="bi bi-camera-fill"></i> 步驟一</span>
+        <h5 class="fw-bold mb-0">拍下老師帥氣 / 美麗的主角照片</h5>
       </div>
-
-      <div class="photo-upload-zone" id="uploadZone" onclick="document.getElementById('teacherPhotoInput').click()">
-        <input type="file" id="teacherPhotoInput" accept="image/*" class="d-none" onchange="handlePhotoSelect(event)">
-        <div id="uploadPrompt">
-          <i class="bi bi-cloud-arrow-up-fill text-primary display-6 d-block mb-2"></i>
-          <p class="fw-bold text-primary mb-1">點擊此處上傳或拍照（老師清晰正臉/半身照）</p>
-          <small class="text-muted">（照片僅在你的瀏覽器本地預覽，不會上傳任何伺服器，安全有保障）</small>
-        </div>
-        <div id="photoPreviewContainer" class="d-none">
-          <div class="photo-preview-box text-start">
-            <img id="photoPreviewImg" class="photo-preview-img" alt="老師照片預覽">
-            <div class="flex-grow-1">
-              <span class="badge bg-success mb-1"><i class="bi bi-check-circle-fill"></i> 主角照片就緒</span>
-              <h6 class="fw-bold mb-0 text-dark" id="photoFileName">teacher.jpg</h6>
-              <small class="text-muted">生圖時請將此照片和下方提示詞一起傳給 AI 對話框！</small>
-            </div>
-            <button type="button" class="btn btn-sm btn-outline-danger" onclick="clearPhoto(event)">
-              <i class="bi bi-trash"></i> 重選
-            </button>
-          </div>
-        </div>
-      </div>
-
       <div class="tip-box mt-3">
-        <div class="d-flex align-items-start gap-2">
-          <i class="bi bi-lightbulb-fill text-warning fs-5"></i>
+        <div class="d-flex align-items-start gap-3">
+          <i class="bi bi-lightbulb-fill text-warning fs-4 flex-shrink-0"></i>
           <div>
-            <strong>小記者拍照秘訣：</strong> 拍老師<strong>正面或 45 度微側面、親切微笑</strong>的半身照，生圖模型（Gemini / ChatGPT / Midjourney）最能忠實捕捉老師的招牌神情與五官輪廓！
+            <strong class="text-primary d-block mb-1">📸 小記者拍照秘訣：</strong>
+            請先用手機或平板幫老師拍一張<strong>清楚正臉、半身、親切微笑</strong>的照片。<br>
+            <span class="text-muted small">（💡 此網站<strong>不需要上傳照片</strong>，等一下提示詞組裝完成後，直接到 AI 繪圖軟體發送提示詞並附上老師照片即可！）</span>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- 任務二：選擇幾幕分鏡 -->
+    <!-- 步驟二：選擇幾幕分鏡 -->
     <div class="main-card p-4">
       <div class="d-flex align-items-center gap-2 mb-3">
-        <span class="task-badge"><i class="bi bi-film"></i> 任務二</span>
+        <span class="task-badge"><i class="bi bi-film"></i> 步驟二</span>
         <h5 class="fw-bold mb-0">你想記錄老師一天的幾幕故事分鏡？</h5>
       </div>
       
@@ -325,14 +271,14 @@
           <h5 class="fw-bold text-success mb-1">
             <i class="bi bi-check2-circle me-1"></i> 提示詞組裝完成！
           </h5>
-          <small class="text-muted">已全面落實「嚴格學生過肩視角」、「背影純色零校徽」、「民族國小制服/運動服精準還原」</small>
+          <small class="text-muted">已落實「嚴格學生過肩視角」、「背影純色無校徽」、「制服配深藍長褲/褲裙」、「體育服自動切換」</small>
         </div>
         <span class="badge bg-success-subtle text-success border border-success fw-bold px-3 py-2">
           即拿即用
         </span>
       </div>
 
-      <!-- 生圖模式切換（單幕高清 vs 四格漫畫） -->
+      <!-- 生圖模式切換（單幕高清 vs 多格連環畫） -->
       <ul class="nav nav-pills mb-3 bg-light p-1 rounded-3 gap-1" id="modeTabs">
         <li class="nav-item">
           <button class="nav-link platform-tab active" type="button" onclick="switchOutputMode('single')">
@@ -375,30 +321,30 @@
           <label class="form-label small fw-bold text-dark mb-0">
             <i class="bi bi-file-earmark-text-fill text-primary me-1"></i> 正面提示詞 (Positive Prompt)：
           </label>
-          <button type="button" class="btn btn-sm btn-link text-decoration-none fw-bold p-0" onclick="copyPrompt('promptResult', this)">
-            <i class="bi bi-clipboard"></i> 一鍵複製
+          <button type="button" class="btn btn-sm btn-link text-decoration-none fw-bold p-0" onclick="copyIndividualPrompt('promptResult', this)">
+            <i class="bi bi-clipboard"></i> 僅複製正面詞
           </button>
         </div>
         <textarea class="form-control font-monospace" id="promptResult" rows="8" readonly style="font-size: 0.88rem; background-color: #fcfcfc;"></textarea>
       </div>
 
-      <!-- 負面提示詞區 (若為 Midjourney 或 FLUX/SD 顯示) -->
+      <!-- 負面提示詞區 -->
       <div id="negativePromptSection" class="mb-3">
         <div class="d-flex justify-content-between align-items-center mb-1">
           <label class="form-label small fw-bold text-danger mb-0">
             <i class="bi bi-dash-circle-fill me-1"></i> 負面提示詞 / 避開特徵 (Negative Prompt / --no)：
           </label>
-          <button type="button" class="btn btn-sm btn-link text-danger text-decoration-none fw-bold p-0" onclick="copyPrompt('negativePromptResult', this)">
-            <i class="bi bi-clipboard"></i> 複製負面詞
+          <button type="button" class="btn btn-sm btn-link text-danger text-decoration-none fw-bold p-0" onclick="copyIndividualPrompt('negativePromptResult', this)">
+            <i class="bi bi-clipboard"></i> 僅複製負面詞
           </button>
         </div>
         <textarea class="form-control font-monospace text-danger-emphasis" id="negativePromptResult" rows="2" readonly style="font-size: 0.85rem; background-color: #fff9f9;"></textarea>
       </div>
 
-      <!-- 複製與生圖指導卡 -->
+      <!-- 核心一鍵全複製按鈕 -->
       <div class="d-grid gap-2">
-        <button type="button" class="btn btn-success btn-lg fw-bold py-2 copy-btn" onclick="copyPrompt('promptResult', this)">
-          <i class="bi bi-clipboard-check-fill me-1"></i> 複製提示詞，去生圖！
+        <button type="button" class="btn btn-success btn-lg fw-bold py-3 copy-btn shadow-sm" onclick="copyBothPrompts(this)">
+          <i class="bi bi-clipboard-check-fill me-1"></i> 一鍵複製全部提示詞（正面＋負面詞），去生圖！
         </button>
       </div>
 
@@ -452,7 +398,6 @@
   let currentPanelCount = 2;
   let currentOutputMode = 'single'; // 'single' 或 'comic'
   let activeSinglePanelIndex = 1;
-  let uploadedTeacherPhotoName = "";
 
   const defaultPeriodNames = [
     "第 1 幕（晨光自習與早讀）",
@@ -482,29 +427,6 @@
           console.log("使用內建題庫備援運行中", err);
         });
     }
-  }
-
-  function handlePhotoSelect(e) {
-    const file = e.target.files[0];
-    if (file) {
-      uploadedTeacherPhotoName = file.name;
-      const reader = new FileReader();
-      reader.onload = function(evt) {
-        document.getElementById('photoPreviewImg').src = evt.target.result;
-        document.getElementById('photoFileName').textContent = file.name;
-        document.getElementById('uploadPrompt').classList.add('d-none');
-        document.getElementById('photoPreviewContainer').classList.remove('d-none');
-      };
-      reader.readAsDataURL(file);
-    }
-  }
-
-  function clearPhoto(e) {
-    e.stopPropagation();
-    document.getElementById('teacherPhotoInput').value = "";
-    uploadedTeacherPhotoName = "";
-    document.getElementById('uploadPrompt').classList.remove('d-none');
-    document.getElementById('photoPreviewContainer').classList.add('d-none');
   }
 
   function setPanelCount(num) {
@@ -597,9 +519,7 @@
           <input type="text" class="form-control mt-2" id="quote_${i}" placeholder="例如：加油！慢慢想，老師相信你！">
         </div>
 
-        <div class="mt-2 text-end" id="attireBadgeContainer_${i}">
-          <!-- 動態服裝提示標籤 -->
-        </div>
+        <div class="mt-2 text-end" id="attireBadgeContainer_${i}"></div>
       `;
 
       container.appendChild(card);
@@ -644,7 +564,7 @@
     } else {
       if (cardEl) cardEl.classList.remove('pe-mode');
       if (badgeContainer) {
-        badgeContainer.innerHTML = `<span class="attire-pill uniform"><i class="bi bi-person-badge"></i> 學生穿著：白色藍領制服（背面純白色無圖案）</span>`;
+        badgeContainer.innerHTML = `<span class="attire-pill uniform"><i class="bi bi-person-badge"></i> 學生穿著：白色藍領制服＋深藍長褲/褲裙（背面純白色無圖案）</span>`;
       }
     }
   }
@@ -701,7 +621,6 @@
         const input = document.getElementById(targetInputId);
         if (input) {
           input.value = input.value ? input.value + ' ' + transcript : transcript;
-          // 重新觸發服裝判定
           const match = targetInputId.match(/\d+/);
           if (match) updateAttireDisplay(parseInt(match[0]));
         }
@@ -723,9 +642,6 @@
   }
 
   // ================= 提示詞核心建構引擎 =================
-
-  // 民族國小校徽定義 (僅在正面露出時使用，嚴禁關聯到背部)
-  const MINZU_CREST_DESCRIPTION = `authentic Minzu Elementary School emblem badge (features a forest-green double-peaked shield base, overlaid with a horizontal white ribbon banner with navy borders, centered with bold red Chinese calligraphy characters "民族")`;
 
   // 精準場景轉換 (英語提示詞)
   function translateSettingAndPOV(place, action, isSports) {
@@ -759,14 +675,14 @@
       settingEn = `an authentic Taiwanese elementary school campus setting (${place})`;
     }
 
-    // 嚴格遵守「學生第一人稱/過肩視角」與「背影純色零校徽」
+    // 嚴格遵守「學生第一人稱/過肩視角」與「背影純色零校徽」及「深藍色褲子/褲裙」
     let povAndForegroundUniform = "";
     if (isSports) {
       // 體育服背部：純亮黃色，無任何印花、文字或校徽
       povAndForegroundUniform = `CAMERA ANGLE: Authentic student first-person over-the-shoulder POV (from the eye-level of a student). In the soft blurred lower foreground are the backs of elementary classmates. These foreground classmates wear clean solid canary-yellow short-sleeve sports t-shirts with grey shoulder panels; CRITICAL CLOTHING DETAIL: their shirt backs are seamless, blank plain solid bright yellow fabric with zero graphics or emblems, completely plain solid bright yellow backs; they wear grey athletic shorts with yellow side stripes. The camera looks directly across them toward the teacher.`;
     } else {
-      // 制服背部：純白色，無任何印花、文字或校徽
-      povAndForegroundUniform = `CAMERA ANGLE: Authentic student first-person over-the-shoulder POV (from the eye-level of a seated student at a desk). In the soft blurred lower foreground are the backs of seated classmates. These foreground classmates wear clean solid pure white short-sleeve polo shirts with royal-blue collars; CRITICAL CLOTHING DETAIL: their shirt backs are unadorned, seamless plain solid white fabric with zero graphics or emblems, completely plain solid white backs; they wear navy blue bottoms. The camera looks directly past them toward the teacher at the front.`;
+      // 制服背部：純白色，無任何印花、文字或校徽；下身為深藍色長褲或深藍色褲裙
+      povAndForegroundUniform = `CAMERA ANGLE: Authentic student first-person over-the-shoulder POV (from the eye-level of a seated student at a desk). In the soft blurred lower foreground are the backs of seated classmates. These foreground classmates wear clean solid pure white short-sleeve polo shirts with royal-blue collars; CRITICAL CLOTHING DETAIL: their shirt backs are unadorned, seamless plain solid white fabric with zero graphics or emblems, completely plain solid white backs; they wear navy blue school trousers or navy blue pleated skorts/culottes. The camera looks directly past them toward the teacher at the front.`;
     }
 
     return { settingEn, povAndForegroundUniform };
@@ -837,7 +753,6 @@
   // 依據目前選取的平台與模式重構提示詞
   function refreshCurrentPrompt() {
     const platform = document.querySelector('input[name="aiPlatform"]:checked')?.value || 'gemini';
-    const negativeSection = document.getElementById('negativePromptSection');
 
     // 收集所有幕的資料
     let sceneData = [];
@@ -888,12 +803,12 @@
         finalPromptText = `${heroIdentityBase} ${s.povEn} Setting: ${s.settingEn}. The teacher is the sharp focal point, ${s.actionEn}. ${speechInstruction} ${artStyleBase} --cref [請在此貼上老師照片的公開網址] --cw 100 --ar 16:9 --style raw --v 6.1 --no ${standardNegativeText}`;
         finalNegativeText = `--no ${standardNegativeText}`;
       } else if (platform === 'chatgpt') {
-        finalPromptText = `Please generate an image based on the uploaded reference photo of the teacher:\n\n${heroIdentityBase}\n\n${s.povEn}\n\nSetting: ${s.settingEn}.\nThe teacher is the main focal character, ${s.actionEn}. ${speechInstruction}\n\n${artStyleBase}\n\nCRITICAL CONSTRAINTS: All foreground student classmates seen from behind MUST have completely blank, solid plain backs with zero logos, text, or badges on their shirts. Keep the teacher's face recognizable and faithful to the reference photo.`;
+        finalPromptText = `Please generate an image based on the uploaded reference photo of the teacher:\n\n${heroIdentityBase}\n\n${s.povEn}\n\nSetting: ${s.settingEn}.\nThe teacher is the main focal character, ${s.actionEn}. ${speechInstruction}\n\n${artStyleBase}\n\nCRITICAL CONSTRAINTS: All foreground student classmates seen from behind MUST have completely blank, solid plain backs with zero logos, text, or badges on their shirts. Students wear navy blue trousers or navy blue pleated skorts/culottes. Keep the teacher's face recognizable and faithful to the reference photo.`;
       } else if (platform === 'flux') {
-        finalPromptText = `${heroIdentityBase}, ${s.povEn}, setting: ${s.settingEn}, the teacher is the central focus: ${s.actionEn}, ${speechInstruction}, ${artStyleBase}, clean solid unprinted shirt backs on foreground students`;
+        finalPromptText = `${heroIdentityBase}, ${s.povEn}, setting: ${s.settingEn}, the teacher is the central focus: ${s.actionEn}, ${speechInstruction}, ${artStyleBase}, clean solid unprinted shirt backs on foreground students, navy blue trousers or skorts`;
       } else {
-        // Google Gemini
-        finalPromptText = `【請上傳老師照片，並搭配以下提示詞發送給 Gemini】：\n\n以所附的老師照片為主角基準，繪製一張教師節專屬高畫質溫馨插畫：\n\n1. 主角鎖定 (Hero Lock)：${heroIdentityBase}\n2. 視角與構圖 (POV & Foreground)：${s.povEn}\n3. 場景設定 (Setting)：${s.settingEn}\n4. 老師動作與神態 (Teacher Action)：${s.actionEn} ${speechInstruction}\n5. 藝術風格 (Art Style)：${artStyleBase}\n\n⚠️ 嚴格約束 (Strict Constraints)：前景以學生過肩視角呈現，看得到台下同學的背部與肩膀；請注意，同學背面的衣服必須是乾淨素色的「純白（制服）」或「純亮黃色（體育服）」，背面絕對不得出現任何校徽、文字、印刷圖樣或標誌！請忠實還原照片中老師的五官神情與招牌笑容。`;
+        // Google Gemini（已移除「請上傳...」前綴，直接提供純淨生圖提示詞）
+        finalPromptText = `以所附的老師照片為主角基準，繪製一張教師節專屬高畫質溫馨插畫：\n\n1. 主角鎖定 (Hero Lock)：${heroIdentityBase}\n2. 視角與構圖 (POV & Foreground)：${s.povEn}\n3. 場景設定 (Setting)：${s.settingEn}\n4. 老師動作與神態 (Teacher Action)：${s.actionEn} ${speechInstruction}\n5. 藝術風格 (Art Style)：${artStyleBase}\n\n⚠️ 嚴格約束 (Strict Constraints)：前景以學生過肩視角呈現，看得到台下同學的背部與肩膀；請注意，同學背面的衣服必須是乾淨素色的「純白（制服）」或「純亮黃色（體育服）」，背面絕對不得出現任何校徽、文字、印刷圖樣或標誌！學生下身穿著深藍色長褲或深藍色褲裙。請忠實還原照片中老師的五官神情與招牌笑容。`;
       }
 
     } else {
@@ -906,9 +821,10 @@
         finalPromptText = `A clean sequential ${currentPanelCount}-panel story comic strip from students' first-person POV. ${heroIdentityBase} ${panelsEn} ${artStyleBase} --cref [請在此貼上老師照片網址] --cw 100 --ar 16:9 --style raw --v 6.1 --no ${standardNegativeText}`;
         finalNegativeText = `--no ${standardNegativeText}`;
       } else if (platform === 'chatgpt') {
-        finalPromptText = `Create a cohesive ${currentPanelCount}-panel sequential comic strip layout based on the uploaded teacher photo:\n${heroIdentityBase}\n${panelsEn}\n${artStyleBase}\nMandatory: All student shirts seen from behind must have completely blank, solid plain backs with zero logos or emblems. Keep teacher face consistent across all panels.`;
+        finalPromptText = `Create a cohesive ${currentPanelCount}-panel sequential comic strip layout based on the uploaded teacher photo:\n${heroIdentityBase}\n${panelsEn}\n${artStyleBase}\nMandatory: All student shirts seen from behind must have completely blank, solid plain backs with zero logos or emblems. Students wear navy blue trousers or skorts. Keep teacher face consistent across all panels.`;
       } else {
-        finalPromptText = `【請上傳老師照片，並搭配以下多格漫畫提示詞發送】：\n\n請根據上傳的老師照片，以一致的人物神韻生成一張 ${currentPanelCount} 格連環畫分鏡（Comic Strip）：\n${heroIdentityBase}\n\n分鏡內容：\n${panelsEn}\n\n風格與要求：${artStyleBase}。前景學生背影一律為乾淨純色（制服純白、體育服純黃），背部禁止任何校徽或印刷圖樣。`;
+        // Google Gemini 多格模式（已移除「請上傳...」前綴）
+        finalPromptText = `請根據所提供的老師照片，以一致的人物神韻生成一張 ${currentPanelCount} 格連環畫分鏡（Comic Strip）：\n${heroIdentityBase}\n\n分鏡內容：\n${panelsEn}\n\n風格與要求：${artStyleBase}。前景學生背影一律為乾淨純色（制服純白、體育服純黃，下身穿深藍色長褲或深藍色褲裙），背部禁止任何校徽或印刷圖樣。`;
       }
     }
 
@@ -926,8 +842,8 @@
         <h6 class="fw-bold text-primary mb-1"><i class="bi bi-google"></i> Google Gemini 生圖教學：</h6>
         <ol class="small mb-0 ps-3">
           <li>開啟 Google Gemini（網頁版或 App）。</li>
-          <li>點擊對話框左側的 <strong>「＋」或迴紋針圖示</strong>，上傳剛剛拍下的<strong>老師照片</strong>。</li>
-          <li>貼上上方複製的提示詞，按下送出，Gemini 就會以照片中的老師為主角，繪製溫馨的學生視角插畫！</li>
+          <li>點擊對話框左側的 <strong>「＋」或迴紋針圖示</strong>，上傳拍下的<strong>老師照片</strong>。</li>
+          <li>貼上上方複製的提示詞，按下送出，Gemini 就會以老師為主角繪製溫馨插畫！</li>
         </ol>
       `;
     } else if (platform === 'chatgpt') {
@@ -954,13 +870,45 @@
         <ol class="small mb-0 ps-3">
           <li>將上方「正面提示詞」貼入 Positive Prompt。</li>
           <li>將下方「負面提示詞」貼入 Negative Prompt。</li>
-          <li>搭配 IP-Adapter (FaceID/InstantID) 或直接圖生圖上傳老師照片，設定權重約 0.7~0.8。</li>
+          <li>搭配 IP-Adapter 或直接圖生圖上傳老師照片，設定權重約 0.7~0.8。</li>
         </ol>
       `;
     }
   }
 
-  function copyPrompt(elementId, btn) {
+  // 核心功能：一鍵將正面詞與負面詞同時複製起來！
+  function copyBothPrompts(btn) {
+    const platform = document.querySelector('input[name="aiPlatform"]:checked')?.value || 'gemini';
+    const pos = document.getElementById('promptResult').value;
+    const neg = document.getElementById('negativePromptResult').value;
+
+    let combinedText = "";
+    if (platform === 'midjourney') {
+      // Midjourney 的提示詞結尾已自動掛載 --no 負面詞參數
+      combinedText = pos;
+    } else {
+      // Gemini / ChatGPT / FLUX 等平台，正面詞與負面詞一併整合複製
+      combinedText = `${pos}\n\n【負面提示詞 / 避開特徵 (Negative Prompt)】\n${neg}`;
+    }
+
+    navigator.clipboard.writeText(combinedText).then(() => {
+      const originalHtml = btn.innerHTML;
+      btn.innerHTML = `<i class="bi bi-check2-all me-1"></i> 正面＋負面提示詞已全部複製！`;
+      btn.classList.add('btn-dark');
+      btn.classList.remove('btn-success');
+      setTimeout(() => {
+        btn.innerHTML = originalHtml;
+        btn.classList.remove('btn-dark');
+        btn.classList.add('btn-success');
+      }, 2500);
+    }).catch(err => {
+      document.execCommand('copy');
+      alert('已成功複製正面與負面提示詞！');
+    });
+  }
+
+  // 單獨複製正面或負面詞
+  function copyIndividualPrompt(elementId, btn) {
     const copyText = document.getElementById(elementId);
     copyText.select();
     navigator.clipboard.writeText(copyText.value).then(() => {
