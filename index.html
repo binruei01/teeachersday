@@ -494,24 +494,34 @@
         </div>
 
         <div class="mb-3">
-          <label class="form-label small fw-bold text-secondary">
-            <i class="bi bi-person-walking text-primary me-1"></i> 老師這時候在做什麼（動作神態）：
-          </label>
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <label class="form-label small fw-bold text-secondary mb-0">
+              <i class="bi bi-person-walking text-primary me-1"></i> 老師這時候在做什麼（動作神態）：
+            </label>
+            <span class="badge bg-primary-subtle text-primary border border-primary-subtle" style="font-size: 0.72rem;">
+              <i class="bi bi-magic me-1"></i>依地點智慧推薦
+            </span>
+          </div>
           <div class="input-group">
-            <select class="form-select" id="action_select_${i}" onchange="handleSelectChange('action_select_${i}', 'action_${i}', ${i})"></select>
+            <select class="form-select" id="action_select_${i}" onchange="handleActionChange(${i})"></select>
             <button type="button" class="btn btn-mic ms-2" onclick="startSpeech('action_${i}', this)" title="點擊按鈕語音輸入">
               <i class="bi bi-mic-fill"></i>
             </button>
           </div>
-          <input type="text" class="form-control mt-2" id="action_${i}" placeholder="可選上方預設，或按麥克風語音/自行打字" oninput="updateAttireDisplay(${i})">
+          <input type="text" class="form-control mt-2" id="action_${i}" placeholder="可選上方推薦選項，或按麥克風語音/自行打字" oninput="handleActionInput(${i})">
         </div>
 
         <div class="mb-2">
-          <label class="form-label small fw-bold text-secondary">
-            <i class="bi bi-chat-heart-fill text-danger me-1"></i> 老師此時說的話或溫暖口頭禪：
-          </label>
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <label class="form-label small fw-bold text-secondary mb-0">
+              <i class="bi bi-chat-heart-fill text-danger me-1"></i> 老師此時說的話或溫暖口頭禪：
+            </label>
+            <span class="badge bg-danger-subtle text-danger border border-danger-subtle" style="font-size: 0.72rem;">
+              <i class="bi bi-stars me-1"></i>依情境自動配對
+            </span>
+          </div>
           <div class="input-group">
-            <select class="form-select" id="quote_select_${i}" onchange="handleSelectChange('quote_select_${i}', 'quote_${i}')"></select>
+            <select class="form-select" id="quote_select_${i}" onchange="handleQuoteChange(${i})"></select>
             <button type="button" class="btn btn-mic ms-2" onclick="startSpeech('quote_${i}', this)" title="點擊按鈕語音輸入">
               <i class="bi bi-mic-fill"></i>
             </button>
@@ -525,19 +535,234 @@
       container.appendChild(card);
 
       fillSelect(`place_${i}`, cachedOptions.places, false);
-      fillSelect(`action_select_${i}`, cachedOptions.actions, true);
-      fillSelect(`quote_select_${i}`, cachedOptions.quotes, true);
+      const initialPlace = cachedOptions.places[(i - 1) % cachedOptions.places.length] || cachedOptions.places[0];
+      document.getElementById(`place_${i}`).value = initialPlace;
 
-      const defaultIdx = (i - 1) % cachedOptions.actions.length;
-      document.getElementById(`action_${i}`).value = cachedOptions.actions[defaultIdx] || '';
-      document.getElementById(`quote_${i}`).value = cachedOptions.quotes[defaultIdx] || '';
-
-      updateAttireDisplay(i);
+      // 智慧初始化連動選項（首選推薦填入）
+      updateCascadedOptions(i, true);
     }
   }
 
+  // 依據地點智慧過濾動作（優先推薦相關動作，其餘置於其他群組）
+  function filterActionsByPlace(placeText) {
+    const allActions = cachedOptions.actions || [];
+    const p = placeText || "";
+
+    const sportsKw = ["操場", "跑道", "籃球", "體育", "體能", "草坪", "活動中心"];
+    const chalkboardKw = ["黑板", "前台", "早自習", "晨光", "教室"];
+    const smartScreenKw = ["數位", "創新", "螢幕", "智慧", "平板"];
+    const scienceKw = ["自然", "科學", "實驗", "生態", "植物", "花圃"];
+    const artKw = ["美術", "工藝", "畫"];
+    const musicKw = ["音樂", "律動", "歌"];
+    const libraryKw = ["圖書", "閱覽"];
+    const officeKw = ["辦公", "導師"];
+    const playgroundKw = ["遊戲", "遊樂", "攀爬"];
+    const hallwayKw = ["走廊", "洗手台", "穿堂", "中庭", "校門", "導護"];
+
+    let recommended = [];
+    let others = [];
+
+    allActions.forEach(action => {
+      let isMatch = false;
+      if (sportsKw.some(k => p.includes(k)) && (action.includes("操場") || action.includes("哨子") || action.includes("體能") || action.includes("球") || action.includes("跑"))) isMatch = true;
+      else if (smartScreenKw.some(k => p.includes(k)) && (action.includes("大螢幕") || action.includes("平板") || action.includes("展示"))) isMatch = true;
+      else if (scienceKw.some(k => p.includes(k)) && (action.includes("自然") || action.includes("實驗") || action.includes("顯微鏡") || action.includes("植物") || action.includes("生態"))) isMatch = true;
+      else if (artKw.some(k => p.includes(k)) && (action.includes("美術") || action.includes("水彩") || action.includes("調色盤") || action.includes("創作") || action.includes("畫"))) isMatch = true;
+      else if (musicKw.some(k => p.includes(k)) && (action.includes("音樂") || action.includes("鋼琴") || action.includes("合唱") || action.includes("唱歌"))) isMatch = true;
+      else if (playgroundKw.some(k => p.includes(k)) && (action.includes("遊戲") || action.includes("攀爬") || action.includes("守護") || action.includes("安全"))) isMatch = true;
+      else if (officeKw.some(k => p.includes(k)) && (action.includes("辦公") || action.includes("批改") || action.includes("紅筆"))) isMatch = true;
+      else if (hallwayKw.some(k => p.includes(k)) && (action.includes("走廊") || action.includes("洗手") || action.includes("長椅") || action.includes("門口") || action.includes("揮手") || action.includes("道別"))) isMatch = true;
+      else if (chalkboardKw.some(k => p.includes(k)) && (action.includes("黑板") || action.includes("粉筆") || action.includes("聯絡簿") || action.includes("講台") || action.includes("課桌") || action.includes("作業"))) isMatch = true;
+
+      if (isMatch) recommended.push(action);
+      else others.push(action);
+    });
+
+    if (recommended.length === 0) {
+      recommended = allActions.slice(0, 3);
+      others = allActions.slice(3);
+    }
+
+    return { recommended, others };
+  }
+
+  // 依據動作與地點智慧過濾口頭禪 / 叮嚀
+  function filterQuotesByActionAndPlace(placeText, actionText) {
+    const allQuotes = cachedOptions.quotes || [];
+    const text = (placeText + " " + actionText).toLowerCase();
+
+    let rec = [];
+    let oth = [];
+
+    allQuotes.forEach(q => {
+      let isMatch = false;
+      if ((text.includes("操場") || text.includes("跑步") || text.includes("體能") || text.includes("哨子")) && 
+          (q.includes("跑") || q.includes("步調") || q.includes("呼吸") || q.includes("接棒") || q.includes("衝刺") || q.includes("加油") || q.includes("汗") || q.includes("肌耐力") || q.includes("撐過去"))) {
+        isMatch = true;
+      } else if ((text.includes("籃球") || text.includes("球")) && 
+          (q.includes("手腕") || q.includes("籃框") || q.includes("防守") || q.includes("助攻") || q.includes("球品") || q.includes("羽球") || q.includes("發力"))) {
+        isMatch = true;
+      } else if ((text.includes("螢幕") || text.includes("平板") || text.includes("資訊") || text.includes("數位")) && 
+          (q.includes("大螢幕") || q.includes("創意") || q.includes("bug") || q.includes("迴圈") || q.includes("手臂的距離") || q.includes("平板"))) {
+        isMatch = true;
+      } else if ((text.includes("實驗") || text.includes("自然") || text.includes("科學") || text.includes("顯微鏡")) && 
+          (q.includes("顯微鏡") || q.includes("低倍鏡") || q.includes("酒精燈") || q.includes("凹液面") || q.includes("試管") || q.includes("數據") || q.includes("植物") || q.includes("毛毛蟲") || q.includes("蝴蝶") || q.includes("葉子") || q.includes("青苔"))) {
+        isMatch = true;
+      } else if ((text.includes("美術") || text.includes("水彩") || text.includes("畫") || text.includes("工藝")) && 
+          (q.includes("水彩") || q.includes("藍色") || q.includes("青草綠") || q.includes("陶土") || q.includes("天空") || q.includes("刀口") || q.includes("毛筆") || q.includes("蠟筆") || q.includes("色彩"))) {
+        isMatch = true;
+      } else if ((text.includes("音樂") || text.includes("鋼琴") || text.includes("合唱") || text.includes("律動")) && 
+          (q.includes("嘴型") || q.includes("高音") || q.includes("拍一遍") || q.includes("微風") || q.includes("唱出來") || q.includes("音樂") || q.includes("節奏") || q.includes("聲"))) {
+        isMatch = true;
+      } else if ((text.includes("洗手") || text.includes("走廊")) && 
+          (q.includes("肥皂") || q.includes("水龍頭") || q.includes("甩三下") || q.includes("洗乾淨") || q.includes("走廊") || q.includes("喝水") || q.includes("小心"))) {
+        isMatch = true;
+      } else if ((text.includes("圖書") || text.includes("閱讀")) && 
+          (q.includes("尋寶記") || q.includes("放輕腳步") || q.includes("恐龍") || q.includes("條碼") || q.includes("書本") || q.includes("讀起來"))) {
+        isMatch = true;
+      } else if ((text.includes("遊戲") || text.includes("攀爬") || text.includes("溜滑梯")) && 
+          (q.includes("手抓緊") || q.includes("核心") || q.includes("溜下來") || q.includes("安全地墊") || q.includes("鐘聲") || q.includes("保護"))) {
+        isMatch = true;
+      } else if ((text.includes("午餐") || text.includes("打菜")) && 
+          (q.includes("雞腿") || q.includes("青菜") || q.includes("熱湯") || q.includes("菜飯") || q.includes("骨頭") || q.includes("廚餘"))) {
+        isMatch = true;
+      } else if ((text.includes("午休") || text.includes("睡")) && 
+          (q.includes("窗簾") || q.includes("趴下") || q.includes("著涼") || q.includes("外套") || q.includes("閉上眼睛") || q.includes("起床"))) {
+        isMatch = true;
+      } else if ((text.includes("放學") || text.includes("道別") || text.includes("書包") || text.includes("打掃")) && 
+          (q.includes("明天見") || q.includes("路上小心") || q.includes("桌椅對齊") || q.includes("關燈") || q.includes("拖把") || q.includes("垃圾") || q.includes("聯絡簿檢查") || q.includes("收齊"))) {
+        isMatch = true;
+      } else if ((text.includes("聯絡簿") || text.includes("黑板") || text.includes("抄寫")) && 
+          (q.includes("黑板") || q.includes("聯絡簿") || q.includes("端正") || q.includes("粉筆") || q.includes("生字") || q.includes("第三筆畫"))) {
+        isMatch = true;
+      } else if ((text.includes("作業") || text.includes("批改") || text.includes("指導") || text.includes("課桌")) && 
+          (q.includes("別緊張") || q.includes("慢慢想") || q.includes("特優章") || q.includes("字寫得越來越漂亮") || q.includes("獎章") || q.includes("移項") || q.includes("解法") || q.includes("進步"))) {
+        isMatch = true;
+      }
+
+      if (isMatch) rec.push(q);
+      else oth.push(q);
+    });
+
+    if (rec.length === 0) {
+      rec = allQuotes.slice(0, 4);
+      oth = allQuotes.slice(4);
+    }
+
+    return { recommended: rec, others: oth };
+  }
+
+  // 動態填入具有 <optgroup> 階層推薦的選單
+  function fillGroupedSelect(selectElementId, recommendedList, otherList, defaultSelectedValue) {
+    const el = document.getElementById(selectElementId);
+    if (!el) return;
+    el.innerHTML = '';
+
+    // 1. 推薦選項群組
+    if (recommendedList && recommendedList.length > 0) {
+      const groupRec = document.createElement('optgroup');
+      groupRec.label = "🌟 推薦選項（最相符情境）";
+      recommendedList.forEach(item => {
+        const opt = document.createElement('option');
+        opt.value = item;
+        opt.textContent = item;
+        groupRec.appendChild(opt);
+      });
+      el.appendChild(groupRec);
+    }
+
+    // 2. 全部其他選項群組
+    if (otherList && otherList.length > 0) {
+      const groupOther = document.createElement('optgroup');
+      groupOther.label = "📋 全部其他校園選項";
+      otherList.forEach(item => {
+        const opt = document.createElement('option');
+        opt.value = item;
+        opt.textContent = item;
+        groupOther.appendChild(opt);
+      });
+      el.appendChild(groupOther);
+    }
+
+    // 3. 自行輸入
+    const customOpt = document.createElement('option');
+    customOpt.value = 'custom';
+    customOpt.textContent = '✏️ 點此自行語音輸入 / 打字...';
+    el.appendChild(customOpt);
+
+    if (defaultSelectedValue && (recommendedList.includes(defaultSelectedValue) || otherList.includes(defaultSelectedValue))) {
+      el.value = defaultSelectedValue;
+    } else if (recommendedList.length > 0) {
+      el.value = recommendedList[0];
+    }
+  }
+
+  // 地點變更時，自動更新並連動動作與口頭禪
+  function updateCascadedOptions(panelIndex, isPlaceChanged) {
+    const placeVal = document.getElementById(`place_${panelIndex}`) ? document.getElementById(`place_${panelIndex}`).value : "";
+    const actionInput = document.getElementById(`action_${panelIndex}`);
+    const quoteInput = document.getElementById(`quote_${panelIndex}`);
+
+    // 1. 根據地點過濾動作
+    const actData = filterActionsByPlace(placeVal);
+    let chosenAction = actionInput.value;
+    if (isPlaceChanged || !chosenAction) {
+      chosenAction = actData.recommended[0] || cachedOptions.actions[0] || "";
+      actionInput.value = chosenAction;
+    }
+    fillGroupedSelect(`action_select_${panelIndex}`, actData.recommended, actData.others, chosenAction);
+
+    // 2. 根據動作與地點過濾口頭禪
+    const quoteData = filterQuotesByActionAndPlace(placeVal, chosenAction);
+    let chosenQuote = quoteInput.value;
+    if (isPlaceChanged || !chosenQuote) {
+      chosenQuote = quoteData.recommended[0] || cachedOptions.quotes[0] || "";
+      quoteInput.value = chosenQuote;
+    }
+    fillGroupedSelect(`quote_select_${panelIndex}`, quoteData.recommended, quoteData.others, chosenQuote);
+
+    updateAttireDisplay(panelIndex);
+  }
+
   function handlePlaceChange(index) {
+    updateCascadedOptions(index, true);
+  }
+
+  function handleActionChange(index) {
+    const selectEl = document.getElementById(`action_select_${index}`);
+    const actionInput = document.getElementById(`action_${index}`);
+    const val = selectEl.value;
+
+    if (val !== 'custom') {
+      actionInput.value = val;
+      const placeVal = document.getElementById(`place_${index}`) ? document.getElementById(`place_${index}`).value : "";
+      
+      // 動作切換時，口頭禪也立即同步更新推薦清單並自動填入第一推薦
+      const quoteData = filterQuotesByActionAndPlace(placeVal, val);
+      fillGroupedSelect(`quote_select_${index}`, quoteData.recommended, quoteData.others, quoteData.recommended[0]);
+      document.getElementById(`quote_${index}`).value = quoteData.recommended[0] || "";
+    } else {
+      actionInput.value = '';
+      actionInput.focus();
+    }
     updateAttireDisplay(index);
+  }
+
+  function handleActionInput(index) {
+    updateAttireDisplay(index);
+  }
+
+  function handleQuoteChange(index) {
+    const selectEl = document.getElementById(`quote_select_${index}`);
+    const quoteInput = document.getElementById(`quote_${index}`);
+    const val = selectEl.value;
+
+    if (val !== 'custom') {
+      quoteInput.value = val;
+    } else {
+      quoteInput.value = '';
+      quoteInput.focus();
+    }
   }
 
   function updateAttireDisplay(index) {
