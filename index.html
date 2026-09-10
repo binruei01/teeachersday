@@ -65,7 +65,7 @@
 <script>
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbxiR3qFFEMmOHEqkVfeBzCs6cK7UvSNaGYNt5uRGX4-qMnnZ0KTnlseengIsZMV8Ldc/exec";
 
-  // 內建資料庫（精選校園情境）
+  // 內建資料庫
   const DEFAULT_OPTIONS = {
     places: [
       "班級教室前台黑板區", "教室走道學生座位旁", "學校健康中心前", "校門口穿堂導護區", "校園生態園區與花圃",
@@ -244,27 +244,27 @@
     recognition.start();
   }
 
-  // 智慧語意修正字典（鏡頭視角鎖定：以學生視角望向講台黑板與大屏）
+  // 智慧語意修正字典（鏡頭視角、背影去校徽、精確正面校徽描述）
   function sanitizeScenePrompt(place, action, quote) {
     let p = place;
     let a = action;
 
-    // 校徽色塊化幾何結構描述（避免 AI 硬畫漢字產生混亂斑駁）
-    const minzhuBadgeDesc = `a crisp chest school badge patch: deep green shield base with a horizontal white ribbon banner across it and a tiny red central emblem, with a rectangular student number tag sewn right above it`;
+    // 只有正面露出時才啟用的高精度校徽特徵
+    const explicitCrestDesc = `authentic school badge featuring a forest-green double-peaked shield base, overlaid with a horizontal white ribbon banner with navy blue borders and notched swallow-tail ends, centered with bold red Chinese calligraphy characters "民族"`;
 
-    // 1. 民族國小專屬學生服裝規則
+    // 1. 學生視角背影服裝：嚴格禁止在背部生成任何校徽
     let studentUniform = "";
     const isOutdoorOrSports = p.includes("操場") || p.includes("籃球") || p.includes("體育") || p.includes("遊樂") || p.includes("遊戲") || p.includes("草坪") || p.includes("草地") || a.includes("跑步") || a.includes("哨子") || a.includes("球") || a.includes("跳");
 
     if (isOutdoorOrSports) {
-      studentUniform = `STUDENT ATTIRE: Foreground elementary students wear yellow sports shirts with grey crew-neck and grey shoulder stripe, ${minzhuBadgeDesc}, and grey shorts with yellow stripes.`;
+      studentUniform = `FOREGROUND STUDENTS ATTIRE (SEEN FROM BEHIND): Viewed from back, students wear clean warm-yellow short-sleeve sports shirts with grey shoulder stripes and grey shorts. STRICTLY NO BADGE OR EMBLEM ON THE BACK OF SHIRTS.`;
     } else {
-      studentUniform = `STUDENT ATTIRE: Foreground seated elementary students wear white short-sleeve polo shirts with royal-blue turn-down collar, ${minzhuBadgeDesc}, and navy pants.`;
+      studentUniform = `FOREGROUND STUDENTS ATTIRE (SEEN FROM BEHIND): Viewed from back, seated students wear plain white short-sleeve polo shirts with royal-blue collars and navy pants. STRICTLY NO BADGE OR LOGO ON THE BACK OF SHIRTS.`;
     }
 
-    // 2. 鏡頭視角與空間鎖定（強制以學生第一人稱視角看講台）
+    // 2. 鏡頭視角與空間鎖定（以學生第一人稱視角看講台）
     if (p.includes("教室") || p.includes("講台") || p.includes("黑板") || p.includes("上課") || a.includes("聯絡簿")) {
-      p = "CAMERA PERSPECTIVE: Shot from the student's point-of-view (POV) in the classroom, looking forward toward the teacher at the front stage. In the background behind the teacher is a wide dark-green chalkboard with chalk notes, a large electronic interactive smart display screen built right in the center of the chalkboard, ceiling fans above, wooden podium, and tidy rows of wooden student desks with green desk pads in the lower foreground";
+      p = "CAMERA PERSPECTIVE: First-person point-of-view (POV) from student seat looking forward to the front stage. In the background behind the teacher is a dark-green chalkboard with chalk notes, a wide electronic interactive smart display screen embedded right in the center of the chalkboard, wooden ceiling fans, and neat wooden desks in blurred foreground";
     } else if (p.includes("遊樂") || p.includes("溜滑梯") || p.includes("單槓") || p.includes("遊戲場")) {
       p = "an inclusive campus playground with a signature curved sky-blue climbing dome with circular cutout holes, blue-green wavy shade canopy overhead, green safety tiles with painted 'JUMP' markers, and trees";
     } else if (p.includes("走廊") || p.includes("洗手台")) {
@@ -273,27 +273,26 @@
       p = "a spacious Taiwanese campus open courtyard featuring signature grey washed-stone round pillars, archways, and open green lawn";
     }
 
-    // 3. 修正聯絡簿站位（絕對站在講台前，不坐在學生座位）
+    // 3. 講台站位修正
     if (a.includes("聯絡簿") || a.includes("黑板") || a.includes("大螢幕") || a.includes("抄寫")) {
-      a = "standing elegantly at the front classroom podium next to the chalkboard, holding chalk and pointing at the daily assignment tasks on the board, speaking warmly to the students";
+      a = "standing gracefully at the front wooden podium next to the chalkboard, holding a piece of chalk and pointing at homework tasks written on the board, speaking warmly to the class";
     } else if (a.includes("指導") || a.includes("解答") || a.includes("身邊") || a.includes("作業")) {
-      a = "patiently bending down beside a wooden student desk, eyes gently looking directly at the open exercise notebook, guiding the student with a warm encouraging smile";
+      a = `patiently bending down beside a student desk, eyes gently looking directly at the open student notebook with a warm smile (if visible from front, student shirt pocket shows ${explicitCrestDesc})`;
     } else if (a.includes("辦公")) {
       a = "sitting at the teacher's office desk with a red pen in hand, focused intently down grading open student notebooks";
     }
 
-    // 4. 視線自然注視學生
-    const gazeConstraint = "eyes engaging warmly with natural eye contact, radiating confidence and genuine care for students";
+    const gazeConstraint = "eyes engaging warmly with natural eye contact, radiating charismatic confidence and genuine care for students";
 
     return { place: p, action: a, gaze: gazeConstraint, uniform: studentUniform };
   }
 
-  // 提示詞組裝（強化主角光環、神韻還原、帥氣美麗美化、學生視角）
+  // 提示詞組裝（強化美化、嚴禁背部校徽、主角光環）
   function generatePromptClientSide() {
-    const baseCharacter = `HERO SUBJECT FOCUS & STRICT IDENTITY LOCK: The main hero is the elementary school teacher. Maintain the EXACT recognizable facial likeness, facial bone structure, true haircut, age, and natural smile directly from the uploaded reference photo person. NATURAL BEAUTY ENHANCEMENT: Render the teacher in a tasteful, highly flattering, charismatic, and handsome/beautiful portrait style with clean radiant skin and charming aura, while keeping their genuine authentic facial identity perfectly recognizable (STRICTLY NO UGLY DISTORTIONS, DO NOT ADD GLASSES unless worn in the reference photo).`;
+    const baseCharacter = `HERO SUBJECT FOCUS & STRICT IDENTITY LOCK: The main central subject is the elementary school teacher. Maintain the EXACT recognizable facial likeness, facial bone structure, true haircut, age, and natural smile directly from the uploaded reference photo person. NATURAL BEAUTY ENHANCEMENT: Render the teacher in a tasteful, highly flattering, charismatic, and handsome/beautiful portrait style with clean radiant skin and charming aura, while keeping their genuine authentic facial identity perfectly recognizable (STRICTLY NO UGLY DISTORTIONS, DO NOT ADD GLASSES unless worn in the reference photo).`;
 
     let formatDesc = (currentPanelCount === 1) 
-      ? "A cinematic story snapshot seen from the students' perspective looking up to their beloved teacher:"
+      ? "A cinematic story snapshot seen from the students' perspective looking up to their beloved teacher at the front:"
       : `A clean ${currentPanelCount}-panel sequential comic strip layout from the students' perspective, highlighting the teacher's day:`;
 
     let sceneDescriptions = [];
@@ -309,7 +308,7 @@
       );
     }
 
-    const styleTail = `Shot from student POV, warm natural morning classroom lighting, 3D animated cinematic storybook aesthetic, high dynamic range, crisp sharp focus on the teacher, rich Taiwanese school architectural details, 8k resolution, perfect hands and anatomy.`;
+    const styleTail = `Shot from student POV, warm natural morning classroom lighting, 3D animated cinematic storybook aesthetic, high dynamic range, crisp sharp focus on the teacher, rich Taiwanese school architectural details, 8k resolution, perfect hands and anatomy. STRICT CONSTRAINT: Absolutely NO crest, logo, or text on the back of student shirts in the foreground.`;
 
     const finalPrompt = `${baseCharacter} ${formatDesc} ${sceneDescriptions.join(' ')} ${styleTail}`;
     
