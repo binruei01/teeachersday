@@ -41,6 +41,7 @@
       font-weight: 800;
       background: linear-gradient(120deg, #123e80 0%, #1e5bb8 60%, #e65100 100%);
       -webkit-background-clip: text;
+      background-clip: text;
       -webkit-text-fill-color: transparent;
       margin-bottom: 8px;
     }
@@ -355,43 +356,123 @@
 </div>
 
 <script>
+  // 離線/備用預設完整資料庫（含全校完整 29 地點、136 動作與 136 句金句對應）
+  const DEFAULT_OPTIONS = {
+    places: ["班級教室前方","教室走道與課桌旁","學校健康中心前","學校健康中心","校門口穿堂導護區","校園蝴蝶復育區與花圃","教室","科任教室","自然教室","校園中庭","音樂教室","操場","風雨球場","班級走廊洗手台旁","學校圖書館閱覽區","遊樂器材區 (溜滑梯與單槓)","班級午餐打菜區","昏暗寧靜的午休教室","走廊","垃圾分類與資源回收場","辦公室","活動中心","社區共獨佔","教室走廊","黑板前","穿堂","陽台","校門口放學路隊集合處","放學後的空無一人教室"],
+    actions: ["在黑板上端正寫下今天的聯絡簿事項與今日目標","微笑清點剛走進教室同學的到校人數","快速翻閱學生繳交的聯絡簿與家長簽章","輕聲提醒全班將桌上整理乾淨準備晨讀","替值日生分配早晨的板擦清理與打掃工作","彎下腰個別指導昨天作業有疑問的孩子","親切摸摸學生的頭詢問身體狀況","巡視每排抽屜整潔並給予鼓勵眼神","遞面紙給流鼻涕的同學並關心添衣","拿著紅筆現場幫主動訂正好的孩子蓋章","陪同跌倒擦傷的學生給護理師擦藥","在門口向護士阿姨確認班上同學的服藥叮嚀","幫發燒身體不適的孩子量體溫並打電話聯絡家長","領取全班的身高體重測量通知單","輕拍受傷同學的肩膀溫柔安撫","身穿黃色導護背心、手拿指揮旗引導路口","向每一位進校門的家長與孩子大聲互道早安","叮嚀小跑步的同學慢下腳步避免撲跌","替手上拿滿美勞用具的同學扶一下書包","微笑與愛心志工媽媽交接值勤重點","帶領早到的小朋友觀察剛破蛹的小蝴蝶","拿起長水管指導值日生如何給植物澆水","拔除花圃周圍的雜草保持環境整齊","指著葉片上的水滴讓學生感受晨露之美","提醒好奇想抓昆蟲的孩子尊重生命","在黑板前用彩色粉筆畫出清晰的心智圖","拿著數學圓規與大三角板在黑板上作圖","走下講台蹲在舉手同學旁進行一對一引導","請兩位同學上台在黑板寫下不同的解題思路","手拿生字卡帶領全班大聲朗讀課文","手持平板將學生的優秀作業即時鏡射到大螢幕","走到平板當機的同學身旁熟練協助重開機排解問題","在大觸控螢幕上示範拖拉積木程式邏輯","提醒全班保持良好平板使用姿勢與距離","宣布分組互動答題競賽開始並倒數計時","戴著護目鏡示範顯微鏡對焦與載玻片製作","巡視每組酒精燈使用確保實驗安全第一","拿著量筒讓學生平視液面判讀刻度","在實驗桌間指導學生記錄實驗現象","實驗結束後指揮學生清潔試管並放回架子","手拿放大鏡引導孩子觀察葉脈網狀分布","指著大樹樹皮上的苔蘚解說向光性","讓學生拓印不同樹木的樹皮紋理","帶著孩子聞聞迷迭香與薄荷葉的自然香氣","提醒小朋友走在石板步道上保護草皮","坐在鋼琴前彈出優美的和弦帶領發聲練習","拿著直笛耐心示範高音手指按孔技巧","跟著節奏拍手打拍子帶領節奏遊戲","用手勢比出高低起伏引導合唱強弱音","給害羞不敢開口唱歌的孩子溫暖眼神鼓勵","穿著球鞋陪著學生一起慢跑揮灑汗水","站在彎道旁替全班大隊接力練習掐碼表計時","提醒跑到滿頭大汗的同學擦汗喝水","幫摔倒擦破皮的孩子扶起來拍掉膝蓋砂石","拿著大聲公提醒大家活動範圍安全","雙手示範胸前傳球與三步上籃標準姿勢","親自下場跟學生打三對三籃球鬥牛賽","調解爭搶籃球的同學並教導友誼第一","把卡在籃框死角的籃球用掃把頂下來","坐在球場邊長椅跟學生分享喝水休息","帶領小朋友唱洗手歌示範「內外夾弓大立腕」","把水龍頭水流調小宣導珍惜水資源","提醒洗完手的孩子甩乾水珠避免地板濕滑","拿著抹布順手將洗手台周遭積水擦乾","笑著傾聽圍在身邊的同學分享生活趣事","坐在木質地板上推薦優質漫畫與科學書給孩子","比出「噓」手勢溫柔提醒孩子輕聲細語","幫個子小的同學從高書架上取下厚厚的大百科","在借還書櫃檯指導小小圖書志工掃條碼","把散落在閱讀沙發上的童書一本本物歸原位","站在單槓旁隨時張開雙臂護持吊單槓的孩子","提醒排隊溜滑梯的小朋友保持安全距離","檢查地墊是否有小石頭與尖銳物確保安全","吹響哨子提醒大家上課鐘響準備回教室","替玩得臉紅通通的小朋友拉好歪掉的衣服","戴上打菜口罩與頭套示範公平分菜","鼓勵挑食不吃青菜的小朋友嘗試吃一口","細心提醒抬湯桶的同學注意防燙與腳步","巡視每位同學的餐盤確認飯菜營養均衡","引導吃完的同學做好廚餘與鐵餐盒分類","把窗簾輕輕拉上、關掉大燈營造睡眠氣氛","走在課桌間輕輕幫睡著踢掉外套的同學蓋好被子","手拿小風扇輕輕走向滿頭大汗睡覺的孩子","坐在講台前檯燈下安靜閱讀教育書籍","放學前輕聲喚醒全班揉揉眼睛伸懶腰","戴著眼鏡拿著紅筆全神貫注批改堆成小山的生字本","一手拿保溫杯喝咖啡、一手在電腦前製作課堂簡報","拿起電話親切向家長說明學生的在校進步","與隔壁班老師熱絡討論下週戶外教學的流程規劃","在行事曆上仔細標記各項競賽報名截止日期","指導環保股長將牛奶紙盒壓扁疊整齊","拿著夾子帶頭撿拾回收桶周遭的掉落塑膠袋","檢查塑膠瓶蓋是否旋開落實純淨分類","誇獎認真秤重紙類的回收小志工","提醒倒完廚餘的孩子用肥皂徹底洗手","操作高速影印機印刷下午要用的課堂學習單","拿著美工刀與長尺細心裁切分組活動卡牌","將一整箱平板車插上充電線檢查電池蓄電量","跟實習老師分享學習單版面編排的小撇步","拿著水彩筆在調色盤上示範三原色漸層暈染","雙手沾滿陶土親自示範手捏陶碗造型拉坯","巡視每張畫架對孩子的創意色彩大加讚許","提醒拿剪刀美工刀的孩子注意手部握持安全","引導全班將水彩筆洗淨筆毛順平朝上晾乾","手拿羽球拍示範正手發高遠球的引拍動作","吹哨指揮各組同學依序進行運球練習","將跳繩長度為身材嬌小的同學調整到最適長度","帶領體能課結束的全班進行肌肉伸展收操運動","手拿麥克風在舞台前指導英語話劇走位與台風","操作音控台調整背景音樂與麥克風音量平衡","蹲在台前幫登台演出的同學整理戲服與道具帽子","帶領全體合唱團同學練習分部和聲對齊節奏","帶頭熱烈鼓掌肯定剛彩排結束的孩子們","陪著孩子席地而坐展開綜合課的小組心得分享","帶領大家仰望天空辨識各種卷雲與積雨雲形狀","拿著飛盤示範水平擲出技巧並跟同學互動拋接","提醒全班離開草皮時低頭檢視帶走所有隨身物品","在黑板端正寫下明天各科攜帶用品叮嚀事項","拿著粉筆字跡工整地在黑板寫下「明天見」與愛心","站在穿堂親切跟背著書包的孩子道別","巡視所有課桌椅確認排成筆直整齊的直線","關上教室所有窗戶並將電源開關一一熄滅","示範如何將拖把在水桶中旋轉擰乾而不滴水","拿著掃把親自帶頭清掃走廊死角的落葉","指導擦玻璃的同學如何用報紙擦出光亮無痕","檢查掃把拖把是否整齊掛在工具架上晾乾","親自將低年級小朋友的手安全交到家長手中","一個人坐在空蕩教室裡一口一口把冷掉的便當吃完","在橘紅夕陽灑落的窗邊靜靜構思明天的教案","替抽屜忘記帶走外套水壺的糊塗孩子收進櫃子","把講台上散落的彩色粉筆依顏色放回盒子裡","深呼吸環視整齊教室露出一抹欣慰溫暖的微笑","拿著碼表大聲替校隊同學的折返跑訓練計時喊話","拿起羽球拍連續餵球給學生進行高壓殺球練習","盤腿坐在球場邊跟隊員圍成一圈檢討訓練得失","跟隊員一起把沉重的大球車合力推進器材室鎖好"],
+    quotes: ["「大家早安！先把今天的聯絡簿抄整齊喔！」","「早安！看到你精神飽滿真好！」","「有特別通知單的同學記得先拿上來給我喔！」","「桌面淨空，讓我們一起安靜看書十分鐘。」","「今天的值日生辛苦了，記得把粉筆灰拍乾淨喔！」","「別緊張，我們看這題，先想想它的題目在問什麼？」","「今天看起來有點累，昨天有早點休息嗎？」","「抽屜收得像小書櫃一樣，很棒的生活習慣！」","「今天早晚溫差大，記得外套別太早脫掉喔！」","「馬上訂正就是最好的學習態度，蓋一個章獎勵！」","「勇敢忍耐一下，護士阿姨擦完藥就沒事了。」","「中午飯後的用藥我會幫忙提醒他吃的。」","「先在床上躺一下休息，校護已經通知爸爸媽媽囉。」","「記得明天排隊測量時要脫鞋子喔！」","「慢慢走，回去教室老師幫你拿水壺。」","「大家慢慢走，看綠燈、走斑馬線最安全！」","「早安！今天也要開開心心上學喔！」","「用走的，安全第一，時間還很充裕喔！」","「大包小包很厲害喔，小心拿穩進教室。」","「志工媽媽辛苦了，謝謝您守護大家的安全！」","「哇你們看！毛毛蟲終於蛻變成漂亮的蝴蝶了！」","「水要澆在泥土根部，植物才吸得到滿滿養分喔！」","「順手拔一根草，花朵就能長得更漂亮。」","「看這顆露珠像不像透明的水晶球？」","「用眼睛仔細觀察就好，不要打擾小昆蟲的家喔！」","「大家看這個分支，把重點抓出來就非常好背了！」","「圓心定好，半徑量準，圓形就能畫得很完美！」","「這一步算得很漂亮，下一步你覺得要怎麼移項？」","「不同方法都很棒，數學的世界沒有唯一標準途徑！」","「聲音很宏亮！注意這個字的第三筆畫是撇不是橫喔！」","「大家看大螢幕，這組同學想出來的解法超有創意！」","「別慌張，遇到 bug 就是學習解決問題最好的機會。」","「迴圈轉三次，角色就會自己走出迷宮囉！」","「眼睛和螢幕保持一個手臂的距離，愛護眼睛喔！」","「限時三分鐘，大家合作討論，找出最佳答案！」","「先用低倍鏡找到目標，轉動細調節輪讓影像變清晰！」","「熄滅酒精燈一定要用燈帽蓋熄，千萬不能用嘴吹喔！」","「眼睛要平視凹液面的最低處，這樣測量才精準。」","「不管是成功還是失敗，誠實把看見的數據記下來！」","「試管洗乾淨倒扣晾乾，這才是專業的小小科學家！」","「大家摸摸看葉子的背面，紋路是不是特別立體？」","「觀察看看，為什麼這一側的青苔長得比較茂密？」","「蠟筆輕輕斜塗，樹皮的天然指紋就跑出來了！」","「輕輕搓揉一下葉子，聞聞大自然神奇的香氣。」","「我們踏在石階上，小草也需要休息呼吸喔！」","「嘴型張成圓圓的 O，用肚子把聲音輕輕推上去～」","「左手大拇指留一條小縫，高音自然就清脆吹出來了！」","「噠、噠、噠噠、噠！換你們跟著拍一遍！」","「這裡要像微風一樣輕柔，漸漸大聲像海浪拍打！」","「大膽唱出來，老師最喜歡聽你真實的歌聲！」","「跟著老師的步調呼吸，跑完體力會更棒喔！」","「接棒默契很好！加速衝刺不要回頭！」","「停下來先深呼吸，擦汗再去洗手喝水！」","「痛痛飛走了！很勇敢，我們去保健室擦個藥。」","「操場逆時針慢跑，不要橫越內圈足球場喔！」","「手腕放鬆輕輕往前推，球自然就會旋轉進籃框！」","「防守要注意腳步！傳得好，漂亮助攻！」","「輸贏不是重點，打球要講求球品與團隊合作。」","「球救下來了，大家輪流投，不要推擠喔！」","「運動完大口喝溫水最舒服，球打得很有進步！」","「肥皂搓出泡泡，七步驟洗乾淨細菌就不見囉！」","「水龍頭開一根筷子的水量就好，愛惜水資源喔！」","「手在洗手台內甩三下，走廊才不會濕滑危險！」","「隨手擦一擦，給下一個洗手的人乾淨的環境。」","「真的嗎？那你家的狗狗一定超級可愛的！」","「這本《尋寶記》超好看，老師自己也看了好幾遍！」","「大家放輕腳步，把安靜留給正在享受閱讀的人。」","「這本恐龍大百科很有份量喔，小心拿穩閱讀。」","「條碼對準紅外線掃描器，聽到嗶一聲就成功囉！」","「看完了記得讓書本回到它原本的家喔。」","「手抓緊！核心用力，老師在旁邊隨時保護你！」","「等前一位同學站起來走出去，下一位再溜下來喔！」","「安全地墊保持乾淨，大家玩得開心又安心。」","「鐘聲響了！器材收心，大家慢慢散步回教室囉！」","「衣服穿好領子翻正，精神飽滿進教室上課！」","「今天有香噴噴的烤雞腿，大家排隊領取喔！」","「深綠色青菜很有營養，吃一小口試試看好不好？」","「熱湯很燙，兩位抬湯員慢慢走，大家主動讓開路！」","「菜飯吃光光，下午才有充足的力氣動腦筋喔！」","「骨頭丟廚餘，餐盒刮乾淨疊整齊，衛生又乾淨！」","「拉上窗簾，大家趴下休息二十分鐘充電囉。」","「小心著涼，把外套蓋在背上睡得更香甜。」","「閉上眼睛好好深呼吸，安靜休息精神好。」","「老師也在陪你們一起享受安靜的午休時間。」","「起床囉！手舉高高伸個懶腰，迎接下午的課！」","「這個同學的筆畫大有進步，一定要蓋個特優章！」","「這張簡報加個動畫，明天學生一定會超驚喜！」","「媽媽您好，今天他在課堂上主動發言，表現超棒！」","「這條參訪路線比較平緩，很適合小朋友步行。」","「時間要規劃好，才能從容帶學生準備比賽。」","「牛奶盒洗乾淨壓扁，體積變小回收才有效率！」","「隨手彎腰撿起來，校園整潔靠大家一起維持！」","「瓶蓋是硬塑膠要分開投，分類越細越環保。」","「今天我們班回收重量很標準，謝謝辛苦的環保股長！」","「倒完廚餘手把摸過，一定要洗手才能回教室喔！」","「印好的學習單按號碼排好，上課發放才迅速。」","「卡牌裁切好角角修圓，才不會刮傷小朋友的手。」","「確認每一台平板都有充飽電，下午資訊課才順暢。」","「字體大一點、留白多一點，低年級孩子讀起來更舒服。」","「加一點點水，讓藍色自然流進黃色裡變成青草綠！」","「大拇指慢慢往下按壓，陶土碗的厚度要均勻喔！」","「這片紫色的天空太夢幻了！你的想像力好棒！」","「刀口永遠朝向外面，慢慢割才安全又整齊。」","「筆毛順好朝上放，毛筆才不會開花壞掉喔！」","「手腕最後輕輕一甩，球就會高高飛到後場！」","「雙手打直夾緊，膝蓋微彎用下盤力量把球送出去！」","「踩在繩子中間，手把拉到腋下就是最剛好的長度。」","「大口吸氣吐氣，伸展大腿肌肉，明天才不會痠痛！」","「聲音要送給最後一排的觀眾，站得挺拔最有自信！」","「音樂淡入，燈光亮起，演員準備就定位！」","「帽子戴正，笑一個，你站在台上超有大將之風！」","「仔細聽隔壁部的聲音，大家合在一起才是最美的音樂。」","「太精彩了！每一次彩排你們都比昨天更棒！」","「每個人都是特別的，我們用心聆聽同學的想法。」","「看那朵厚厚像棉花糖的雲，是典型的積雲喔！」","「手腕向外平平甩出去，飛盤就會穩穩滑翔！」","「低頭看看周圍，除了笑聲，垃圾一樣都不能留喔！」","「聯絡簿檢查第三遍，明天要帶美勞用具不要忘記喔！」","「今天大家都很認真，給自己一個掌聲，明天見！」","「今天表現很棒！路上小心，明天見囉！」","「桌椅對齊地磚線條，教室看起來井然有序真舒服！」","「隨手關燈節約能源，檢查門窗扣好才安全回家。」","「拖把擰到八分乾，地板拖過去才會快乾又不會滑倒！」","「角落灰塵集中掃成一堆，再用畚箕一口氣裝起來。」","「用舊報紙畫圓擦拭，玻璃就會像透明的一樣乾淨！」","「掃具排整齊掛好，通風乾燥才不會產生異味喔！」","「爸爸媽媽好！他今天在學校上課非常專心喔！」","「終於把今天的事忙告一個段落，好充實的一天！」","「明天這節課這樣引導，孩子們一定會覺得很好玩！」","「這個小迷糊，明天早自習再來找他領回去。」","「白色、紅色、黃色排好，明天黑板又有新色彩。」","「看到孩子們一天天進步懂事，這一切都值得了！」","「最後五趟！撐過去肌耐力就是你的，加油！」","「手腕下壓發力，目光盯緊球心，漂亮的一擊！」","「今天的配合默契進步很多，失誤沒關係，再練就好！」","「器材歸位落實清點，明天放學我們同一時間見！」"]
+  };
+
   // Google Apps Script 後端端點 (從使用者試算表讀取詞庫)
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbxiR3qFFEMmOHEqkVfeBzCs6cK7UvSNaGYNt5uRGX4-qMnnZ0KTnlseengIsZMV8Ldc/exec";
 
-  // 離線/備用內建完整題庫
-  const DEFAULT_OPTIONS = {
-    places: [
-      "班級教室前台黑板區", "智慧數位創新教室講台", "自然與科學實驗室講台前", "美術與工藝教室講桌前",
-      "音樂與律動教室講台", "學校圖書館閱覽區", "校園中庭植物園區", "班級走廊洗手台旁",
-      "校門口穿堂導護區", "學校健康中心前", "學年導師辦公室桌前", "班級午餐打菜區前",
-      "大操場 PU 跑道", "戶外籃球場邊", "室內多功能體育館", "活動中心中庭大草坪", "共融遊戲場 (圓孔穹頂攀爬架旁)"
-    ],
-    actions: [
-      "站在講台黑板前，手拿粉筆指著黑板上的聯絡簿抄寫要點", 
-      "站在黑板正中央的大螢幕前，手拿平板熱情展示教學畫面", 
-      "站在講台前親切微笑，向台下學生說明今天的學習任務", 
-      "彎下腰走到學生課桌旁，專注耐心指導作業解答", 
-      "手拿哨子站在操場上，充滿活力示範體能動作並大聲加油", 
-      "站在走廊長椅旁，親切彎腰聽學生分享生活趣事", 
-      "坐在辦公桌前拿著紅筆全神貫注批改學生筆記本", 
-      "在共融遊戲場圓形攀爬架旁，張開雙手貼心守護孩子安全", 
-      "站在教室門口講台旁，微笑與背著書包的學生揮手道別",
-      "在自然實驗室講台示範顯微鏡觀察，神情專注引導學生",
-      "在美術教室展示水彩畫調色盤，熱心稱讚台下學生的創作",
-      "在音樂教室彈奏鋼琴帶領大家合唱，眼神充滿鼓勵"
-    ],
-    quotes: [
-      "「大家看黑板，聯絡簿字體要抄寫整齊端正喔！」", 
-      "「哇！大家看大螢幕，這個做法超級有創意！」", 
-      "「別緊張，慢慢想，你一定能找到解答的！」", 
-      "「今天大家表現都很棒，給自己一個熱烈掌聲！」", 
-      "「加油！堅持到底就是最棒的表現！」", 
-      "「下課多喝水，走廊上慢慢走注意安全喔！」", 
-      "「字寫得越來越漂亮了，老師給你蓋一個大獎章！」", 
-      "「東西都收齊了嗎？路上小心，我們明天見！」",
-      "「大家看這個顯微鏡下的細胞壁，是不是非常精巧？」",
-      "「深呼吸～把聲音輕輕送上來，唱得非常動聽！」"
-    ]
+  // 國小校園情境嚴格分類字典 (徹底杜絕跨科室/跨場域動作污染，保證 100% 符合國小學生生活實況)
+  const PLACE_ACTION_CATALOG = {
+    music: {
+      name: "音樂律動教室",
+      match: function(p) { return p.indexOf("音樂") !== -1 || p.indexOf("律動") !== -1 || p.indexOf("歌") !== -1; },
+      indices: [45, 46, 47, 48, 49, 111]
+    },
+    art: {
+      name: "美勞工藝教室",
+      match: function(p) { return p.indexOf("美術") !== -1 || p.indexOf("工藝") !== -1 || p.indexOf("美勞") !== -1 || p.indexOf("畫") !== -1; },
+      indices: [99, 100, 101, 102, 103]
+    },
+    science: {
+      name: "自然科學實驗室",
+      match: function(p) { return p.indexOf("自然") !== -1 || p.indexOf("科學") !== -1 || p.indexOf("實驗") !== -1; },
+      indices: [35, 36, 37, 38, 39]
+    },
+    digital: {
+      name: "智慧數位創新教室",
+      match: function(p) { return p.indexOf("數位") !== -1 || p.indexOf("創新") !== -1 || p.indexOf("資訊") !== -1 || p.indexOf("電腦") !== -1 || p.indexOf("科任") !== -1; },
+      indices: [30, 31, 32, 33, 34, 97]
+    },
+    sports_track: {
+      name: "大操場跑道田徑",
+      match: function(p) { return p.indexOf("操場") !== -1 || p.indexOf("跑道") !== -1; },
+      indices: [50, 51, 52, 53, 54, 106, 107]
+    },
+    sports_court: {
+      name: "體育館與球場",
+      match: function(p) { return p.indexOf("球場") !== -1 || p.indexOf("體育館") !== -1 || p.indexOf("籃球") !== -1; },
+      indices: [55, 56, 57, 58, 59, 104, 105, 132, 133, 134, 135]
+    },
+    nature_garden: {
+      name: "校園生態花圃中庭",
+      match: function(p) { return p.indexOf("蝴蝶") !== -1 || p.indexOf("花圃") !== -1 || p.indexOf("生態") !== -1 || p.indexOf("植物") !== -1 || p.indexOf("陽台") !== -1 || p.indexOf("中庭") !== -1; },
+      indices: [20, 21, 22, 23, 24, 40, 41, 42, 43, 44]
+    },
+    library: {
+      name: "圖書館與社區共讀站",
+      match: function(p) { return p.indexOf("圖書") !== -1 || p.indexOf("閱覽") !== -1 || p.indexOf("共獨") !== -1 || p.indexOf("共讀") !== -1; },
+      indices: [65, 66, 67, 68, 69]
+    },
+    playground: {
+      name: "遊樂器材與共融遊戲場",
+      match: function(p) { return p.indexOf("遊樂") !== -1 || p.indexOf("遊戲") !== -1 || p.indexOf("溜滑梯") !== -1 || p.indexOf("單槓") !== -1 || p.indexOf("攀爬") !== -1; },
+      indices: [70, 71, 72, 73, 74]
+    },
+    lunch: {
+      name: "班級午餐打菜區",
+      match: function(p) { return p.indexOf("午餐") !== -1 || p.indexOf("打菜") !== -1; },
+      indices: [75, 76, 77, 78, 79]
+    },
+    nap: {
+      name: "寧靜午休教室",
+      match: function(p) { return p.indexOf("午休") !== -1 || p.indexOf("寧靜") !== -1; },
+      indices: [80, 81, 82, 83, 84]
+    },
+    health: {
+      name: "健康中心保健室",
+      match: function(p) { return p.indexOf("健康") !== -1 || p.indexOf("保健") !== -1; },
+      indices: [10, 11, 12, 13, 14]
+    },
+    entrance_guide: {
+      name: "校門穿堂導護與放學路隊",
+      match: function(p) { return p.indexOf("校門") !== -1 || p.indexOf("導護") !== -1 || p.indexOf("穿堂") !== -1 || p.indexOf("路隊") !== -1; },
+      indices: [15, 16, 17, 18, 19, 119, 126]
+    },
+    hallway_wash: {
+      name: "走廊洗手台與衛生整潔",
+      match: function(p) { return p.indexOf("洗手") !== -1 || p.indexOf("走廊") !== -1; },
+      indices: [60, 61, 62, 63, 64, 122, 123, 124, 125]
+    },
+    recycle: {
+      name: "資源回收場與環保教育",
+      match: function(p) { return p.indexOf("回收") !== -1 || p.indexOf("垃圾") !== -1; },
+      indices: [90, 91, 92, 93, 94]
+    },
+    auditorium: {
+      name: "活動中心展演舞台",
+      match: function(p) { return p.indexOf("活動中心") !== -1 && p.indexOf("草坪") === -1; },
+      indices: [108, 109, 110, 111, 112]
+    },
+    lawn: {
+      name: "大草坪戶外活動",
+      match: function(p) { return p.indexOf("草坪") !== -1 || p.indexOf("草地") !== -1; },
+      indices: [113, 114, 115, 116]
+    },
+    office: {
+      name: "教師辦公室備課與批改",
+      match: function(p) { return p.indexOf("辦公") !== -1 || p.indexOf("導師室") !== -1; },
+      indices: [85, 86, 87, 88, 89, 95, 96, 98]
+    },
+    classroom_afterschool: {
+      name: "放學後的空無一人教室",
+      match: function(p) { return p.indexOf("空無一人") !== -1 || p.indexOf("放學後") !== -1; },
+      indices: [120, 121, 127, 128, 129, 130, 131]
+    },
+    classroom_front: {
+      name: "班級黑板前講台",
+      match: function(p) { return p.indexOf("黑板") !== -1 || p.indexOf("前方") !== -1 || p.indexOf("前台") !== -1; },
+      indices: [0, 1, 2, 3, 4, 25, 26, 28, 29, 117, 118]
+    },
+    classroom_desks: {
+      name: "教室走道與課桌巡視",
+      match: function(p) { return p.indexOf("課桌") !== -1 || p.indexOf("走道") !== -1 || p.indexOf("教室") !== -1; },
+      indices: [5, 6, 7, 8, 9, 27]
+    }
   };
 
   let cachedOptions = DEFAULT_OPTIONS;
@@ -543,126 +624,98 @@
     }
   }
 
-  // 依據地點智慧過濾動作（優先推薦相關動作，其餘置於其他群組）
+  // 依據地點嚴格過濾動作（只精確提取該地點之專屬動作，徹底排除跨教室污染）
   function filterActionsByPlace(placeText) {
     const allActions = cachedOptions.actions || [];
     const p = placeText || "";
 
-    const sportsKw = ["操場", "跑道", "籃球", "體育", "體能", "草坪", "活動中心"];
-    const chalkboardKw = ["黑板", "前台", "早自習", "晨光", "教室"];
-    const smartScreenKw = ["數位", "創新", "螢幕", "智慧", "平板"];
-    const scienceKw = ["自然", "科學", "實驗", "生態", "植物", "花圃"];
-    const artKw = ["美術", "工藝", "畫"];
-    const musicKw = ["音樂", "律動", "歌"];
-    const libraryKw = ["圖書", "閱覽"];
-    const officeKw = ["辦公", "導師"];
-    const playgroundKw = ["遊戲", "遊樂", "攀爬"];
-    const hallwayKw = ["走廊", "洗手台", "穿堂", "中庭", "校門", "導護"];
+    let matchedCatKey = null;
+    for (const key in PLACE_ACTION_CATALOG) {
+      if (PLACE_ACTION_CATALOG[key].match(p)) {
+        matchedCatKey = key;
+        break;
+      }
+    }
+    if (!matchedCatKey) matchedCatKey = 'classroom_front';
 
+    const cat = PLACE_ACTION_CATALOG[matchedCatKey];
     let recommended = [];
-    let others = [];
 
-    allActions.forEach(action => {
-      let isMatch = false;
-      if (sportsKw.some(k => p.includes(k)) && (action.includes("操場") || action.includes("哨子") || action.includes("體能") || action.includes("球") || action.includes("跑"))) isMatch = true;
-      else if (smartScreenKw.some(k => p.includes(k)) && (action.includes("大螢幕") || action.includes("平板") || action.includes("展示"))) isMatch = true;
-      else if (scienceKw.some(k => p.includes(k)) && (action.includes("自然") || action.includes("實驗") || action.includes("顯微鏡") || action.includes("植物") || action.includes("生態"))) isMatch = true;
-      else if (artKw.some(k => p.includes(k)) && (action.includes("美術") || action.includes("水彩") || action.includes("調色盤") || action.includes("創作") || action.includes("畫"))) isMatch = true;
-      else if (musicKw.some(k => p.includes(k)) && (action.includes("音樂") || action.includes("鋼琴") || action.includes("合唱") || action.includes("唱歌"))) isMatch = true;
-      else if (playgroundKw.some(k => p.includes(k)) && (action.includes("遊戲") || action.includes("攀爬") || action.includes("守護") || action.includes("安全"))) isMatch = true;
-      else if (officeKw.some(k => p.includes(k)) && (action.includes("辦公") || action.includes("批改") || action.includes("紅筆"))) isMatch = true;
-      else if (hallwayKw.some(k => p.includes(k)) && (action.includes("走廊") || action.includes("洗手") || action.includes("長椅") || action.includes("門口") || action.includes("揮手") || action.includes("道別"))) isMatch = true;
-      else if (chalkboardKw.some(k => p.includes(k)) && (action.includes("黑板") || action.includes("粉筆") || action.includes("聯絡簿") || action.includes("講台") || action.includes("課桌") || action.includes("作業"))) isMatch = true;
-
-      if (isMatch) recommended.push(action);
-      else others.push(action);
+    // 精確從 136 動作池中提取專屬於該場景的動作
+    cat.indices.forEach(idx => {
+      if (allActions[idx]) {
+        recommended.push(allActions[idx]);
+      }
     });
 
+    // 若因特殊情況未匹配到，使用安全語意過濾
     if (recommended.length === 0) {
-      recommended = allActions.slice(0, 3);
-      others = allActions.slice(3);
+      recommended = allActions.filter(act => {
+        if (p.indexOf("音樂") !== -1) return act.indexOf("琴") !== -1 || act.indexOf("笛") !== -1 || act.indexOf("唱") !== -1;
+        if (p.indexOf("美") !== -1) return act.indexOf("水彩") !== -1 || act.indexOf("陶土") !== -1 || act.indexOf("畫") !== -1;
+        if (p.indexOf("自然") !== -1) return act.indexOf("顯微鏡") !== -1 || act.indexOf("酒精燈") !== -1 || act.indexOf("實驗") !== -1;
+        if (p.indexOf("操場") !== -1) return act.indexOf("跑") !== -1 || act.indexOf("接力") !== -1 || act.indexOf("哨子") !== -1;
+        if (p.indexOf("球") !== -1) return act.indexOf("籃球") !== -1 || act.indexOf("羽球") !== -1;
+        return false;
+      });
     }
 
-    return { recommended, others };
+    if (recommended.length === 0) {
+      recommended = allActions.slice(0, 5);
+    }
+
+    return { recommended: recommended, categoryKey: matchedCatKey };
   }
 
-  // 依據動作與地點智慧過濾口頭禪 / 叮嚀
+  // 依據動作與地點精準提取口頭禪（1-to-1 最吻合金句置頂，並提供同情境專屬叮嚀）
   function filterQuotesByActionAndPlace(placeText, actionText) {
+    const allActions = cachedOptions.actions || [];
     const allQuotes = cachedOptions.quotes || [];
-    const text = (placeText + " " + actionText).toLowerCase();
+    const p = placeText || "";
+    const act = actionText || "";
 
     let rec = [];
-    let oth = [];
 
-    allQuotes.forEach(q => {
-      let isMatch = false;
-      if ((text.includes("操場") || text.includes("跑步") || text.includes("體能") || text.includes("哨子")) && 
-          (q.includes("跑") || q.includes("步調") || q.includes("呼吸") || q.includes("接棒") || q.includes("衝刺") || q.includes("加油") || q.includes("汗") || q.includes("肌耐力") || q.includes("撐過去"))) {
-        isMatch = true;
-      } else if ((text.includes("籃球") || text.includes("球")) && 
-          (q.includes("手腕") || q.includes("籃框") || q.includes("防守") || q.includes("助攻") || q.includes("球品") || q.includes("羽球") || q.includes("發力"))) {
-        isMatch = true;
-      } else if ((text.includes("螢幕") || text.includes("平板") || text.includes("資訊") || text.includes("數位")) && 
-          (q.includes("大螢幕") || q.includes("創意") || q.includes("bug") || q.includes("迴圈") || q.includes("手臂的距離") || q.includes("平板"))) {
-        isMatch = true;
-      } else if ((text.includes("實驗") || text.includes("自然") || text.includes("科學") || text.includes("顯微鏡")) && 
-          (q.includes("顯微鏡") || q.includes("低倍鏡") || q.includes("酒精燈") || q.includes("凹液面") || q.includes("試管") || q.includes("數據") || q.includes("植物") || q.includes("毛毛蟲") || q.includes("蝴蝶") || q.includes("葉子") || q.includes("青苔"))) {
-        isMatch = true;
-      } else if ((text.includes("美術") || text.includes("水彩") || text.includes("畫") || text.includes("工藝")) && 
-          (q.includes("水彩") || q.includes("藍色") || q.includes("青草綠") || q.includes("陶土") || q.includes("天空") || q.includes("刀口") || q.includes("毛筆") || q.includes("蠟筆") || q.includes("色彩"))) {
-        isMatch = true;
-      } else if ((text.includes("音樂") || text.includes("鋼琴") || text.includes("合唱") || text.includes("律動")) && 
-          (q.includes("嘴型") || q.includes("高音") || q.includes("拍一遍") || q.includes("微風") || q.includes("唱出來") || q.includes("音樂") || q.includes("節奏") || q.includes("聲"))) {
-        isMatch = true;
-      } else if ((text.includes("洗手") || text.includes("走廊")) && 
-          (q.includes("肥皂") || q.includes("水龍頭") || q.includes("甩三下") || q.includes("洗乾淨") || q.includes("走廊") || q.includes("喝水") || q.includes("小心"))) {
-        isMatch = true;
-      } else if ((text.includes("圖書") || text.includes("閱讀")) && 
-          (q.includes("尋寶記") || q.includes("放輕腳步") || q.includes("恐龍") || q.includes("條碼") || q.includes("書本") || q.includes("讀起來"))) {
-        isMatch = true;
-      } else if ((text.includes("遊戲") || text.includes("攀爬") || text.includes("溜滑梯")) && 
-          (q.includes("手抓緊") || q.includes("核心") || q.includes("溜下來") || q.includes("安全地墊") || q.includes("鐘聲") || q.includes("保護"))) {
-        isMatch = true;
-      } else if ((text.includes("午餐") || text.includes("打菜")) && 
-          (q.includes("雞腿") || q.includes("青菜") || q.includes("熱湯") || q.includes("菜飯") || q.includes("骨頭") || q.includes("廚餘"))) {
-        isMatch = true;
-      } else if ((text.includes("午休") || text.includes("睡")) && 
-          (q.includes("窗簾") || q.includes("趴下") || q.includes("著涼") || q.includes("外套") || q.includes("閉上眼睛") || q.includes("起床"))) {
-        isMatch = true;
-      } else if ((text.includes("放學") || text.includes("道別") || text.includes("書包") || text.includes("打掃")) && 
-          (q.includes("明天見") || q.includes("路上小心") || q.includes("桌椅對齊") || q.includes("關燈") || q.includes("拖把") || q.includes("垃圾") || q.includes("聯絡簿檢查") || q.includes("收齊"))) {
-        isMatch = true;
-      } else if ((text.includes("聯絡簿") || text.includes("黑板") || text.includes("抄寫")) && 
-          (q.includes("黑板") || q.includes("聯絡簿") || q.includes("端正") || q.includes("粉筆") || q.includes("生字") || q.includes("第三筆畫"))) {
-        isMatch = true;
-      } else if ((text.includes("作業") || text.includes("批改") || text.includes("指導") || text.includes("課桌")) && 
-          (q.includes("別緊張") || q.includes("慢慢想") || q.includes("特優章") || q.includes("字寫得越來越漂亮") || q.includes("獎章") || q.includes("移項") || q.includes("解法") || q.includes("進步"))) {
-        isMatch = true;
+    // 1. 若該動作在 136 題庫中有精確對應的口頭禪，絕對優先置頂！
+    const actIndex = allActions.indexOf(act);
+    if (actIndex !== -1 && allQuotes[actIndex]) {
+      rec.push(allQuotes[actIndex]);
+    }
+
+    // 2. 補充當前場景分類中的其他專屬口頭禪
+    let matchedCatKey = null;
+    for (const key in PLACE_ACTION_CATALOG) {
+      if (PLACE_ACTION_CATALOG[key].match(p)) {
+        matchedCatKey = key;
+        break;
       }
+    }
+    if (!matchedCatKey) matchedCatKey = 'classroom_front';
 
-      if (isMatch) rec.push(q);
-      else oth.push(q);
+    const cat = PLACE_ACTION_CATALOG[matchedCatKey];
+    cat.indices.forEach(idx => {
+      if (allQuotes[idx] && rec.indexOf(allQuotes[idx]) === -1) {
+        rec.push(allQuotes[idx]);
+      }
     });
 
     if (rec.length === 0) {
-      rec = allQuotes.slice(0, 4);
-      oth = allQuotes.slice(4);
+      rec = allQuotes.slice(0, 5);
     }
 
-    return { recommended: rec, others: oth };
+    return { recommended: rec };
   }
 
-  // 動態填入具有 <optgroup> 階層推薦的選單
-  function fillGroupedSelect(selectElementId, recommendedList, otherList, defaultSelectedValue) {
+  // 動態填入選單：只呈現專屬該地點的情境選項，絕不跨場地倒出無關干擾項目
+  function fillGroupedSelect(selectElementId, itemList, defaultSelectedValue, labelName) {
     const el = document.getElementById(selectElementId);
     if (!el) return;
     el.innerHTML = '';
 
-    // 1. 推薦選項群組
-    if (recommendedList && recommendedList.length > 0) {
+    if (itemList && itemList.length > 0) {
       const groupRec = document.createElement('optgroup');
-      groupRec.label = "🌟 推薦選項（最相符情境）";
-      recommendedList.forEach(item => {
+      groupRec.label = labelName || "🌟 本地點專屬真實情境";
+      itemList.forEach(item => {
         const opt = document.createElement('option');
         opt.value = item;
         opt.textContent = item;
@@ -671,55 +724,42 @@
       el.appendChild(groupRec);
     }
 
-    // 2. 全部其他選項群組
-    if (otherList && otherList.length > 0) {
-      const groupOther = document.createElement('optgroup');
-      groupOther.label = "📋 全部其他校園選項";
-      otherList.forEach(item => {
-        const opt = document.createElement('option');
-        opt.value = item;
-        opt.textContent = item;
-        groupOther.appendChild(opt);
-      });
-      el.appendChild(groupOther);
-    }
-
-    // 3. 自行輸入
+    // 自行輸入 / 語音輸入
     const customOpt = document.createElement('option');
     customOpt.value = 'custom';
     customOpt.textContent = '✏️ 點此自行語音輸入 / 打字...';
     el.appendChild(customOpt);
 
-    if (defaultSelectedValue && (recommendedList.includes(defaultSelectedValue) || otherList.includes(defaultSelectedValue))) {
+    if (defaultSelectedValue && itemList.indexOf(defaultSelectedValue) !== -1) {
       el.value = defaultSelectedValue;
-    } else if (recommendedList.length > 0) {
-      el.value = recommendedList[0];
+    } else if (itemList.length > 0) {
+      el.value = itemList[0];
     }
   }
 
-  // 地點變更時，自動更新並連動動作與口頭禪
+  // 地點變更時，自動更新並連動動作與口頭禪（徹底保證場景純淨度）
   function updateCascadedOptions(panelIndex, isPlaceChanged) {
     const placeVal = document.getElementById(`place_${panelIndex}`) ? document.getElementById(`place_${panelIndex}`).value : "";
     const actionInput = document.getElementById(`action_${panelIndex}`);
     const quoteInput = document.getElementById(`quote_${panelIndex}`);
 
-    // 1. 根據地點過濾動作
+    // 1. 根據地點嚴格過濾專屬動作
     const actData = filterActionsByPlace(placeVal);
     let chosenAction = actionInput.value;
-    if (isPlaceChanged || !chosenAction) {
-      chosenAction = actData.recommended[0] || cachedOptions.actions[0] || "";
+    if (isPlaceChanged || !chosenAction || actData.recommended.indexOf(chosenAction) === -1) {
+      chosenAction = actData.recommended[0] || "";
       actionInput.value = chosenAction;
     }
-    fillGroupedSelect(`action_select_${panelIndex}`, actData.recommended, actData.others, chosenAction);
+    fillGroupedSelect(`action_select_${panelIndex}`, actData.recommended, chosenAction, "🌟 本地點老師的經典神態");
 
-    // 2. 根據動作與地點過濾口頭禪
+    // 2. 根據動作與地點嚴格過濾專屬口頭禪
     const quoteData = filterQuotesByActionAndPlace(placeVal, chosenAction);
     let chosenQuote = quoteInput.value;
-    if (isPlaceChanged || !chosenQuote) {
-      chosenQuote = quoteData.recommended[0] || cachedOptions.quotes[0] || "";
+    if (isPlaceChanged || !chosenQuote || quoteData.recommended.indexOf(chosenQuote) === -1) {
+      chosenQuote = quoteData.recommended[0] || "";
       quoteInput.value = chosenQuote;
     }
-    fillGroupedSelect(`quote_select_${panelIndex}`, quoteData.recommended, quoteData.others, chosenQuote);
+    fillGroupedSelect(`quote_select_${panelIndex}`, quoteData.recommended, chosenQuote, "💬 老師此時常說的溫暖叮嚀");
 
     updateAttireDisplay(panelIndex);
   }
@@ -737,9 +777,9 @@
       actionInput.value = val;
       const placeVal = document.getElementById(`place_${index}`) ? document.getElementById(`place_${index}`).value : "";
       
-      // 動作切換時，口頭禪也立即同步更新推薦清單並自動填入第一推薦
+      // 動作切換時，口頭禪立即連動切換到該動作對應的專屬金句！
       const quoteData = filterQuotesByActionAndPlace(placeVal, val);
-      fillGroupedSelect(`quote_select_${index}`, quoteData.recommended, quoteData.others, quoteData.recommended[0]);
+      fillGroupedSelect(`quote_select_${index}`, quoteData.recommended, quoteData.recommended[0], "💬 老師此時常說的溫暖叮嚀");
       document.getElementById(`quote_${index}`).value = quoteData.recommended[0] || "";
     } else {
       actionInput.value = '';
@@ -1215,3 +1255,4 @@ MANDATORY SPECIFICATIONS:
 </script>
 </body>
 </html>
+
