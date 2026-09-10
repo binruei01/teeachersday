@@ -30,7 +30,7 @@
   </div>
 
   <form id="observerForm" class="d-none">
-    <!-- 任務一：拍照任務提示 -->
+    <!-- 任務一：拍照提示 -->
     <div class="card p-3 p-md-4">
       <div class="mb-2"><span class="badge-step">任務一</span> <strong class="ms-2">替老師拍一張帥氣/美麗的照片！</strong></div>
       <div class="photo-tip mt-2">
@@ -69,7 +69,7 @@
 </div>
 
 <script>
-  // ⚠️ 請在此處填入您發布的 Google Apps Script /exec 網址
+  // ⚠️ 請填入您發布的 Google Apps Script /exec 網址
   const GAS_API_URL = "YOUR_GAS_EXEC_URL";
 
   let cachedOptions = null;
@@ -219,24 +219,29 @@
     recognition.start();
   }
 
-  // 智慧語意修正字典（深度整合教室大屏實景、校園景致、民族國小制服）
+  // 智慧語意修正字典（整合真實校徽、精準校服、大屏木桌椅教室與校園實景）
   function sanitizeScenePrompt(place, action, quote) {
     let p = place;
     let a = action;
 
-    // 1. 民族國小專屬制服與運動服智慧判斷
+    // 民族國小專屬精確校徽描述
+    const minzhuSchoolCrest = `authentic school emblem consisting of a dark forest-green shield base overlaid with a horizontal white ribbon banner with navy blue borders and swallow-tail notched ends, emblazoned with bold red Chinese calligraphy characters "民族" in the center`;
+
+    // 1. 民族國小專屬學生服裝規則
     let studentUniform = "";
     const isOutdoorOrSports = p.includes("操場") || p.includes("籃球") || p.includes("體育") || p.includes("遊樂") || p.includes("遊戲") || p.includes("草坪") || p.includes("草地") || a.includes("跑步") || a.includes("哨子") || a.includes("球") || a.includes("跳");
 
     if (isOutdoorOrSports) {
-      studentUniform = "MANDATORY STUDENT ATTIRE: Surrounding elementary kids MUST wear bright yellow PE sports t-shirts with distinct grey/black shoulder stripes, crew neck, and athletic grey shorts with yellow side stripes.";
+      // 運動服：亮黃色、灰滾邊圓領、右肩灰黑條紋、左胸精確校徽與長方形名牌布標、灰底黃條運動短褲
+      studentUniform = `MANDATORY STUDENT ATTIRE: Surrounding elementary students must wear Chiayi Minzhu Elementary sports uniform: bright warm-yellow short-sleeve shirt with grey crew-neck collar, vertical grey and black racing stripes on the right shoulder/chest, left chest printed with the ${minzhuSchoolCrest} and a rectangular student ID number badge sewn right above it, paired with athletic grey shorts featuring bold yellow side stripes.`;
     } else {
-      studentUniform = "MANDATORY STUDENT ATTIRE: Surrounding elementary kids MUST wear school uniform polo shirts: clean white body, bright cyan-blue collar with red/white inner pinstripe, cyan sleeve cuffs, and dark school pants.";
+      // 制服：純白短袖Polo、純白袖子、寶藍翻領帶紅白細紋、左胸口袋繡精確校徽、口袋上方縫名牌布標、深藍下身
+      studentUniform = `MANDATORY STUDENT ATTIRE: Surrounding elementary students must wear Chiayi Minzhu Elementary uniform: crisp white short-sleeve polo shirt with plain white sleeves, royal-blue turn-down collar with fine red and white pinstripes along the collar edge, a left chest patch pocket embroidered with the ${minzhuSchoolCrest}, a rectangular student ID number badge sewn cleanly right above the pocket, paired with dark navy-blue school uniform pants.`;
     }
 
-    // 2. 教室實景精準定義（依照片：大屏嵌於黑板中央、木頭課桌椅、綠桌墊、磨石子地、吊扇）
+    // 2. 教室實景（大屏嵌於黑板中央、傳統木課桌椅、綠切割墊、吊扇、磨石子地）
     if (p.includes("教室") || p.includes("講台") || p.includes("黑板") || p.includes("上課")) {
-      p = "an authentic Taiwanese elementary school classroom: front wall features a large electronic smart interactive display screen embedded in the center of a wide dark green chalkboard, wooden ceiling fans overhead, neat rows of traditional light-brown wooden student desks and wooden chairs, green desk pads on student tables, backpacks hanging on desk sides, and classic grey terrazzo tiled floor";
+      p = "an authentic Taiwanese elementary school classroom: front wall features a large electronic smart interactive display screen embedded directly in the center of a wide dark green chalkboard with chalk notes, wooden ceiling fans overhead, neat rows of traditional light-brown wooden student desks and wooden chairs, green desk pads on student tables, backpacks hanging on desk sides, and classic grey terrazzo tiled floor";
     } else if (p.includes("遊樂") || p.includes("溜滑梯") || p.includes("單槓") || p.includes("遊戲場")) {
       p = "an inclusive campus playground with a unique curved sky-blue climbing dome with circular holes, a woven circular bird's nest swing under a blue-and-green wavy shade canopy, green rubber safety tiles with painted 'JUMP' measurement markers, and lush trees";
     } else if (p.includes("走廊") || p.includes("洗手台")) {
@@ -247,12 +252,12 @@
       p = "a lush green campus courtyard lawn featuring iconic stone ape sculptures, colorful silhouette art statues of running kids, and background school buildings with arched windows and yellow-accent balconies";
     }
 
-    // 3. 作業與聯絡簿具象化
+    // 3. 作業與聯絡簿
     if (p.includes("辦公桌") || a.includes("聯絡簿") || a.includes("作業") || a.includes("生字")) {
       a = a.replace(/聯絡簿|作業|生字本/g, "open student homework exercise notebooks with red pen corrections and cute star grading stamps");
     }
 
-    // 4. 視線與互動鎖定
+    // 4. 視線與動作聚焦
     let gazeConstraint = "";
     if (a.includes("指導") || a.includes("解答") || a.includes("看著") || a.includes("身邊") || a.includes("回答") || a.includes("聊天") || a.includes("擊掌")) {
       gazeConstraint = "eye contact locked attentively onto the young elementary students, head tilted gently downward, engaging with genuine warmth";
@@ -267,13 +272,13 @@
     return { place: p, action: a, gaze: gazeConstraint, uniform: studentUniform };
   }
 
-  // 提示詞組裝
+  // 提示詞組裝（強化人像極致還原）
   function generatePromptClientSide() {
-    const baseCharacter = `High-fidelity 3D Pixar character render directly based on the uploaded reference photo person: maintain exact real-life face structure, haircut, true age, and authentic warm facial expression. STRICT NEGATIVE CONSTRAINT: DO NOT ADD EYEGLASSES unless worn in the reference photo; strictly preserve natural bare eyes and genuine facial features.`;
+    const baseCharacter = `STRICT PHOTOREALISTIC IDENTITY LOCK: Maintain the EXACT facial likeness, recognizable facial structure, authentic age, eye shape, nose, mouth, haircut, and genuine smile of the real teacher shown in the uploaded reference photo. Render the teacher with precise portrait fidelity to the original person. STRICT NEGATIVE CONSTRAINT: DO NOT change the teacher's face into a generic cartoon face; DO NOT ADD EYEGLASSES unless explicitly worn in the reference photo; strictly preserve the natural face and true physical likeness without alterations.`;
 
     let formatDesc = (currentPanelCount === 1) 
-      ? "A single heartwarming cinematic story snapshot of this teacher:"
-      : `A clean ${currentPanelCount}-panel comic storyboard sequence depicting a day in the life of this teacher:`;
+      ? "A single heartwarming story snapshot capturing a day in the life of this teacher:"
+      : `A clean ${currentPanelCount}-panel sequential storyboard comic sequence capturing a day in the life of this teacher:`;
 
     let sceneDescriptions = [];
     for (let i = 1; i <= currentPanelCount; i++) {
@@ -284,11 +289,11 @@
       const clean = sanitizeScenePrompt(rawPlace, rawAction, quote);
 
       sceneDescriptions.push(
-        `Panel ${i}: Location is ${clean.place}. The teacher is actively ${clean.action}. Facial emotion and composition: ${clean.gaze}, feeling of: "${quote}". ${clean.uniform}`
+        `Panel ${i}: Setting is ${clean.place}. The teacher is actively ${clean.action}. Facial expression and composition: ${clean.gaze}, portraying the caring message: "${quote}". ${clean.uniform}`
       );
     }
 
-    const styleTail = `Authentic Taiwanese campus architecture featuring signature grey washed-stone round pillars, archways, front smart screen chalkboard, wooden desks, vibrant blue/yellow student sportswear and white-blue polo uniforms, natural warm Taiwanese sunlight, cinematic depth of field, Pixar Disney 3D animation aesthetic, expressive Pixar eyes, rich environmental details, 8k resolution, photorealistic volumetric lighting, perfectly rendered human anatomy and hands.`;
+    const styleTail = `Authentic Taiwanese campus environment, soft warm natural morning sunlight, 3D animated cinematic storybook aesthetic, high dynamic range, ultra-detailed skin textures, lifelike eyes, rich architectural details, 8k resolution, perfect human anatomy and hands.`;
 
     const finalPrompt = `${baseCharacter} ${formatDesc} ${sceneDescriptions.join(' ')} ${styleTail}`;
     
