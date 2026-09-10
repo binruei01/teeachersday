@@ -23,12 +23,14 @@
     <p class="text-muted">拍下老師的照片，記錄老師 1～6 幕的精采時光！</p>
   </div>
 
+  <!-- 資料載入指示 -->
   <div id="loadingIndicator" class="text-center py-5">
     <div class="spinner-border text-primary" role="status"></div>
     <div class="mt-2 text-muted fw-bold">正在讀取試算表中的精選工作清單...</div>
   </div>
 
   <form id="observerForm" class="d-none">
+    <!-- 任務一：拍照任務提示 -->
     <div class="card p-3 p-md-4">
       <div class="mb-2"><span class="badge-step">任務一</span> <strong class="ms-2">替老師拍一張帥氣/美麗的照片！</strong></div>
       <div class="photo-tip mt-2">
@@ -36,6 +38,7 @@
       </div>
     </div>
 
+    <!-- 任務二：選擇幾幕（1～6 幕） -->
     <div class="card p-3 p-md-4">
       <div class="mb-3"><span class="badge-step">任務二</span> <strong class="ms-2">你想記錄老師一天的幾幕故事分鏡？</strong></div>
       <div class="d-flex flex-wrap gap-2" id="sceneCountBtnGroup">
@@ -49,22 +52,25 @@
       <small class="text-muted mt-2 d-block">👉 點擊切換，下方會自動調整對應的填寫卡片。</small>
     </div>
 
+    <!-- 動態分鏡卡片容器 -->
     <div id="scenesContainer"></div>
 
+    <!-- 產出按鈕 -->
     <button type="button" class="btn btn-primary btn-lg w-100 fw-bold py-3 shadow-sm mb-4" onclick="generatePromptClientSide()">✨ 點擊生成「圖生圖」專用提示詞</button>
 
+    <!-- 結果展示區 -->
     <div class="card p-3 p-md-4 d-none" id="resultCard">
       <h5 class="fw-bold text-success mb-2">🎉 圖生圖 Prompt 組裝完成！</h5>
       <p class="text-muted small">請點擊下方複製，並將剛剛拍的<strong>老師照片</strong>與這段提示詞一起上傳生圖：</p>
-      <textarea class="form-control mb-3" id="promptResult" rows="7" readonly></textarea>
+      <textarea class="form-control mb-3" id="promptResult" rows="8" readonly></textarea>
       <button type="button" class="btn btn-outline-success w-100 fw-bold" onclick="copyPrompt()">📋 一鍵複製提示詞</button>
     </div>
   </form>
 </div>
 
 <script>
-  // ⚠️ 請換成您發布的 GAS /exec 網址
-  const GAS_API_URL = "https://script.google.com/macros/s/AKfycbxiR3qFFEMmOHEqkVfeBzCs6cK7UvSNaGYNt5uRGX4-qMnnZ0KTnlseengIsZMV8Ldc/exec";
+  // ⚠️ 請在此處填入您發布的 Google Apps Script /exec 網址
+  const GAS_API_URL = "YOUR_GAS_EXEC_URL";
 
   let cachedOptions = null;
   let currentPanelCount = 2;
@@ -88,7 +94,7 @@
         renderSceneCards(currentPanelCount);
       })
       .catch(err => {
-        alert('無法連線試算表資料，請確認 GAS 網址與權限已設為「所有人」！');
+        alert('無法連線試算表資料，請確認 GAS 網址是否正確，且存取權限已設為「所有人」！');
       });
   };
 
@@ -174,11 +180,11 @@
     }
   }
 
-  // 獨立網域原生支援：麥克風 100% 正常運作
+  // 麥克風語音辨識
   function startSpeech(targetInputId, btnElement) {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      alert('您的瀏覽器未支援語音辨識功能，請使用 Google Chrome 開啟！');
+      alert('您的瀏覽器未支援語音辨識功能，建議使用 Google Chrome 開啟！');
       return;
     }
 
@@ -202,7 +208,7 @@
     recognition.onerror = function(event) {
       btnElement.classList.remove('recording');
       if (event.error === 'not-allowed') {
-        alert('請在彈窗中允許麥克風權限！');
+        alert('請在瀏覽器彈窗中允許麥克風權限！');
       }
     };
 
@@ -213,74 +219,89 @@
     recognition.start();
   }
 
-  // 智慧語意修正字典（將台灣校園特色精準轉為 AI 聽得懂的具象英文）
-function sanitizeScenePrompt(place, action, quote) {
-  let p = place;
-  let a = action;
+  // 智慧語意修正字典（深度整合教室大屏實景、校園景致、民族國小制服）
+  function sanitizeScenePrompt(place, action, quote) {
+    let p = place;
+    let a = action;
 
-  // 1. 修正洗手台（避免畫成廚房流理台或地板拖把槽）
-  if (p.includes("洗手台") || a.includes("洗手")) {
-    p = "an open-air elementary school corridor with an outdoor multi-faucet tiled washbasin trough at kid waist-height, water taps in a row";
-    a = a.replace(/洗手台/g, "waist-height outdoor washbasin").replace(/洗手/g, "washing hands under running tap water");
+    // 1. 民族國小專屬制服與運動服智慧判斷
+    let studentUniform = "";
+    const isOutdoorOrSports = p.includes("操場") || p.includes("籃球") || p.includes("體育") || p.includes("遊樂") || p.includes("遊戲") || p.includes("草坪") || p.includes("草地") || a.includes("跑步") || a.includes("哨子") || a.includes("球") || a.includes("跳");
+
+    if (isOutdoorOrSports) {
+      studentUniform = "MANDATORY STUDENT ATTIRE: Surrounding elementary kids MUST wear bright yellow PE sports t-shirts with distinct grey/black shoulder stripes, crew neck, and athletic grey shorts with yellow side stripes.";
+    } else {
+      studentUniform = "MANDATORY STUDENT ATTIRE: Surrounding elementary kids MUST wear school uniform polo shirts: clean white body, bright cyan-blue collar with red/white inner pinstripe, cyan sleeve cuffs, and dark school pants.";
+    }
+
+    // 2. 教室實景精準定義（依照片：大屏嵌於黑板中央、木頭課桌椅、綠桌墊、磨石子地、吊扇）
+    if (p.includes("教室") || p.includes("講台") || p.includes("黑板") || p.includes("上課")) {
+      p = "an authentic Taiwanese elementary school classroom: front wall features a large electronic smart interactive display screen embedded in the center of a wide dark green chalkboard, wooden ceiling fans overhead, neat rows of traditional light-brown wooden student desks and wooden chairs, green desk pads on student tables, backpacks hanging on desk sides, and classic grey terrazzo tiled floor";
+    } else if (p.includes("遊樂") || p.includes("溜滑梯") || p.includes("單槓") || p.includes("遊戲場")) {
+      p = "an inclusive campus playground with a unique curved sky-blue climbing dome with circular holes, a woven circular bird's nest swing under a blue-and-green wavy shade canopy, green rubber safety tiles with painted 'JUMP' measurement markers, and lush trees";
+    } else if (p.includes("走廊") || p.includes("洗手台")) {
+      p = "an authentic Taiwanese elementary school outdoor hallway with warm yellow square wall tiles, a vintage slatted wooden bench with green potted plants beside it, large glass windows, and open-air corridors";
+    } else if (p.includes("穿堂") || p.includes("校門") || p.includes("中庭")) {
+      p = "a spacious Taiwanese campus open-air courtyard and atrium featuring classic grey washed-pebble (granite grit) circular pillars, elegant semi-circular archways, layered multi-story architectural curves, and an open central green lawn";
+    } else if (p.includes("草坪") || p.includes("草地") || p.includes("花圃")) {
+      p = "a lush green campus courtyard lawn featuring iconic stone ape sculptures, colorful silhouette art statues of running kids, and background school buildings with arched windows and yellow-accent balconies";
+    }
+
+    // 3. 作業與聯絡簿具象化
+    if (p.includes("辦公桌") || a.includes("聯絡簿") || a.includes("作業") || a.includes("生字")) {
+      a = a.replace(/聯絡簿|作業|生字本/g, "open student homework exercise notebooks with red pen corrections and cute star grading stamps");
+    }
+
+    // 4. 視線與互動鎖定
+    let gazeConstraint = "";
+    if (a.includes("指導") || a.includes("解答") || a.includes("看著") || a.includes("身邊") || a.includes("回答") || a.includes("聊天") || a.includes("擊掌")) {
+      gazeConstraint = "eye contact locked attentively onto the young elementary students, head tilted gently downward, engaging with genuine warmth";
+    } else if (a.includes("批改") || a.includes("備課") || a.includes("寫")) {
+      gazeConstraint = "eyes focused intently down on the open notebook on the wooden desk, holding a red grading pen";
+    } else if (a.includes("大螢幕") || a.includes("黑板") || a.includes("講台")) {
+      gazeConstraint = "standing proudly at the front wooden podium near the smart screen, gesturing toward the digital screen while smiling warmly at students";
+    } else {
+      gazeConstraint = "natural candid warm eye expression, interacting authentically with surrounding school children";
+    }
+
+    return { place: p, action: a, gaze: gazeConstraint, uniform: studentUniform };
   }
 
-  // 2. 修正聯絡簿 / 批改作業（避免畫成厚電話簿）
-  if (p.includes("辦公桌") || a.includes("聯絡簿") || a.includes("作業") || a.includes("生字")) {
-    a = a.replace(/聯絡簿|作業|生字本/g, "open student exercise notebook with red pen checkmarks and cute star grading stamps");
+  // 提示詞組裝
+  function generatePromptClientSide() {
+    const baseCharacter = `High-fidelity 3D Pixar character render directly based on the uploaded reference photo person: maintain exact real-life face structure, haircut, true age, and authentic warm facial expression. STRICT NEGATIVE CONSTRAINT: DO NOT ADD EYEGLASSES unless worn in the reference photo; strictly preserve natural bare eyes and genuine facial features.`;
+
+    let formatDesc = (currentPanelCount === 1) 
+      ? "A single heartwarming cinematic story snapshot of this teacher:"
+      : `A clean ${currentPanelCount}-panel comic storyboard sequence depicting a day in the life of this teacher:`;
+
+    let sceneDescriptions = [];
+    for (let i = 1; i <= currentPanelCount; i++) {
+      const rawPlace = document.getElementById(`place_${i}`).value;
+      const rawAction = document.getElementById(`action_${i}`).value;
+      const quote = document.getElementById(`quote_${i}`).value;
+
+      const clean = sanitizeScenePrompt(rawPlace, rawAction, quote);
+
+      sceneDescriptions.push(
+        `Panel ${i}: Location is ${clean.place}. The teacher is actively ${clean.action}. Facial emotion and composition: ${clean.gaze}, feeling of: "${quote}". ${clean.uniform}`
+      );
+    }
+
+    const styleTail = `Authentic Taiwanese campus architecture featuring signature grey washed-stone round pillars, archways, front smart screen chalkboard, wooden desks, vibrant blue/yellow student sportswear and white-blue polo uniforms, natural warm Taiwanese sunlight, cinematic depth of field, Pixar Disney 3D animation aesthetic, expressive Pixar eyes, rich environmental details, 8k resolution, photorealistic volumetric lighting, perfectly rendered human anatomy and hands.`;
+
+    const finalPrompt = `${baseCharacter} ${formatDesc} ${sceneDescriptions.join(' ')} ${styleTail}`;
+    
+    document.getElementById('promptResult').value = finalPrompt;
+    document.getElementById('resultCard').classList.remove('d-none');
+    document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth' });
   }
 
-  // 3. 修正眼神與視線方向（強迫視線聚焦在學生或課本上）
-  let gazeConstraint = "";
-  if (a.includes("指導") || a.includes("解答") || a.includes("看著") || a.includes("身邊") || a.includes("回答")) {
-    gazeConstraint = "eye contact locked attentively onto the young elementary student, head tilted gently downward, engaging warmly";
-  } else if (a.includes("批改") || a.includes("備課") || a.includes("寫")) {
-    gazeConstraint = "eyes focused intently down on the open notebook on the table, holding a red ballpoint pen";
-  } else if (a.includes("大螢幕") || a.includes("黑板")) {
-    gazeConstraint = "pointing hand toward the chalkboard, turning face sideways smiling toward seated elementary students";
-  } else {
-    gazeConstraint = "natural candid warm eye expression, interacting authentically with surrounding school children";
-  }
-
-  return { place: p, action: a, gaze: gazeConstraint };
-}
-
-// 升級版提示詞組裝
-function generatePromptClientSide() {
-  // 嚴格特徵錨定（特別防堵自動亂加眼鏡、維持長相一致）
-  const baseCharacter = `High-fidelity 3D Pixar character render directly based on the uploaded reference photo person: maintain exact real-life face structure, actual haircut, true age, and genuine facial expression. STRICT NEGATIVE CONSTRAINT: DO NOT ADD EYEGLASSES unless explicitly worn in the reference photo; strictly preserve natural bare eyes and authentic facial features without generic AI distortions.`;
-
-  let formatDesc = (currentPanelCount === 1) 
-    ? "A single heartwarming cinematic story snapshot of this elementary school teacher:"
-    : `A clean ${currentPanelCount}-panel comic storyboard sequence depicting a day in the life of this teacher:`;
-
-  let sceneDescriptions = [];
-  for (let i = 1; i <= currentPanelCount; i++) {
-    const rawPlace = document.getElementById(`place_${i}`).value;
-    const rawAction = document.getElementById(`action_${i}`).value;
-    const quote = document.getElementById(`quote_${i}`).value;
-
-    // 經由字典濾鏡精準重塑場景
-    const clean = sanitizeScenePrompt(rawPlace, rawAction, quote);
-
-    sceneDescriptions.push(
-      `Panel ${i}: Setting is ${clean.place}. The teacher is actively ${clean.action}. Facial emotion and composition: ${clean.gaze}, portraying the caring warm emotion: "${quote}".`
-    );
-  }
-
-  // 鎖定構圖細節，去除怪異解剖與假道具
-  const styleTail = `Authentic Taiwanese elementary school environment, natural warm daylight, cinematic depth of field, Pixar Disney 3D animation style, expressive Pixar eyes, highly detailed textures on wooden desks and notebooks, 8k resolution, photorealistic volumetric lighting, perfectly rendered human hands and realistic gestures.`;
-
-  const finalPrompt = `${baseCharacter} ${formatDesc} ${sceneDescriptions.join(' ')} ${styleTail}`;
-  
-  document.getElementById('promptResult').value = finalPrompt;
-  document.getElementById('resultCard').classList.remove('d-none');
-  document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth' });
-}
   function copyPrompt() {
     const copyText = document.getElementById('promptResult');
     copyText.select();
     document.execCommand('copy');
-    alert('提示詞複製成功！');
+    alert('提示詞複製成功！快去搭配老師的照片一起生圖吧！');
   }
 </script>
 </body>
