@@ -23,13 +23,7 @@
     <p class="text-muted">拍下老師的照片，記錄老師 1～6 幕的精采時光！</p>
   </div>
 
-  <!-- 資料載入指示 -->
-  <div id="loadingIndicator" class="text-center py-5">
-    <div class="spinner-border text-primary" role="status"></div>
-    <div class="mt-2 text-muted fw-bold">正在讀取試算表中的精選工作清單...</div>
-  </div>
-
-  <form id="observerForm" class="d-none">
+  <form id="observerForm">
     <!-- 任務一：拍照提示 -->
     <div class="card p-3 p-md-4">
       <div class="mb-2"><span class="badge-step">任務一</span> <strong class="ms-2">替老師拍一張帥氣/美麗的照片！</strong></div>
@@ -62,17 +56,47 @@
     <div class="card p-3 p-md-4 d-none" id="resultCard">
       <h5 class="fw-bold text-success mb-2">🎉 圖生圖 Prompt 組裝完成！</h5>
       <p class="text-muted small">請點擊下方複製，並將剛剛拍的<strong>老師照片</strong>與這段提示詞一起上傳生圖：</p>
-      <textarea class="form-control mb-3" id="promptResult" rows="8" readonly></textarea>
+      <textarea class="form-control mb-3" id="promptResult" rows="9" readonly></textarea>
       <button type="button" class="btn btn-outline-success w-100 fw-bold" onclick="copyPrompt()">📋 一鍵複製提示詞</button>
     </div>
   </form>
 </div>
 
 <script>
-  // ⚠️ 請填入您發布的 Google Apps Script /exec 網址
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbxiR3qFFEMmOHEqkVfeBzCs6cK7UvSNaGYNt5uRGX4-qMnnZ0KTnlseengIsZMV8Ldc/exec";
 
-  let cachedOptions = null;
+  // 內建資料庫（精選校園情境）
+  const DEFAULT_OPTIONS = {
+    places: [
+      "班級教室前台黑板區", "教室走道學生座位旁", "學校健康中心前", "校門口穿堂導護區", "校園生態園區與花圃",
+      "智慧數位創新教室講台", "自然與科學實驗室前", "校園中庭植物園", "音樂與律動教室", "大操場 PU 跑道",
+      "戶外籃球場邊", "班級走廊洗手台旁", "學校圖書館閱覽區", "共融遊戲場 (圓孔穹頂攀爬架旁)", "班級午餐打菜區前",
+      "學年導師辦公室桌前", "美術與工藝教室講桌前", "室內多功能體育館", "活動中心中庭大草坪"
+    ],
+    actions: [
+      "站在講台黑板前，手拿粉筆指著黑板上的聯絡簿抄寫要點", 
+      "站在黑板正中央的大螢幕前，手拿平板熱情展示教學畫面", 
+      "站在講台前親切微笑，向台下學生說明今天的學習任務", 
+      "彎下腰走到學生課桌旁，專注耐心指導作業解答", 
+      "手拿哨子站在操場上，充滿活力示範體能動作並大聲加油", 
+      "站在走廊長椅旁，親切彎腰聽學生分享生活趣事", 
+      "坐在辦公桌前拿著紅筆全神貫注批改學生筆記本", 
+      "在共融遊戲場圓形攀爬架旁，張開雙手貼心守護孩子安全", 
+      "站在教室門口講台旁，微笑與背著書包的學生揮手道別"
+    ],
+    quotes: [
+      "「大家看黑板，聯絡簿字體要抄寫整齊端正喔！」", 
+      "「哇！大家看大螢幕，這個做法超級有創意！」", 
+      "「別緊張，慢慢想，你一定能找到解答的！」", 
+      "「今天大家表現都很棒，給自己一個熱烈掌聲！」", 
+      "「加油！堅持到底就是最棒的表現！」", 
+      "「下課多喝水，走廊上慢慢走注意安全喔！」", 
+      "「字寫得越來越漂亮了，老師給你蓋一個大獎章！」", 
+      "「東西都收齊了嗎？路上小心，我們明天見！」"
+    ]
+  };
+
+  let cachedOptions = DEFAULT_OPTIONS;
   let currentPanelCount = 2;
 
   const defaultPeriodNames = [
@@ -85,17 +109,19 @@
   ];
 
   window.onload = function() {
-    fetch(GAS_API_URL)
-      .then(res => res.json())
-      .then(data => {
-        cachedOptions = data;
-        document.getElementById('loadingIndicator').classList.add('d-none');
-        document.getElementById('observerForm').classList.remove('d-none');
-        renderSceneCards(currentPanelCount);
-      })
-      .catch(err => {
-        alert('無法連線試算表資料，請確認 GAS 網址是否正確，且存取權限已設為「所有人」！');
-      });
+    renderSceneCards(currentPanelCount);
+
+    if (GAS_API_URL && !GAS_API_URL.includes("YOUR_GAS_EXEC_URL")) {
+      fetch(GAS_API_URL)
+        .then(res => res.json())
+        .then(data => {
+          if (data && data.places && data.places.length > 0) {
+            cachedOptions = data;
+            renderSceneCards(currentPanelCount);
+          }
+        })
+        .catch(err => console.log("使用內建題庫運行中"));
+    }
   };
 
   function setPanelCount(num) {
@@ -180,7 +206,6 @@
     }
   }
 
-  // 麥克風語音辨識
   function startSpeech(targetInputId, btnElement) {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
@@ -219,66 +244,57 @@
     recognition.start();
   }
 
-  // 智慧語意修正字典（整合真實校徽、精準校服、大屏木桌椅教室與校園實景）
+  // 智慧語意修正字典（鏡頭視角鎖定：以學生視角望向講台黑板與大屏）
   function sanitizeScenePrompt(place, action, quote) {
     let p = place;
     let a = action;
 
-    // 民族國小專屬精確校徽描述
-    const minzhuSchoolCrest = `authentic school emblem consisting of a dark forest-green shield base overlaid with a horizontal white ribbon banner with navy blue borders and swallow-tail notched ends, emblazoned with bold red Chinese calligraphy characters "民族" in the center`;
+    // 校徽色塊化幾何結構描述（避免 AI 硬畫漢字產生混亂斑駁）
+    const minzhuBadgeDesc = `a crisp chest school badge patch: deep green shield base with a horizontal white ribbon banner across it and a tiny red central emblem, with a rectangular student number tag sewn right above it`;
 
     // 1. 民族國小專屬學生服裝規則
     let studentUniform = "";
     const isOutdoorOrSports = p.includes("操場") || p.includes("籃球") || p.includes("體育") || p.includes("遊樂") || p.includes("遊戲") || p.includes("草坪") || p.includes("草地") || a.includes("跑步") || a.includes("哨子") || a.includes("球") || a.includes("跳");
 
     if (isOutdoorOrSports) {
-      // 運動服：亮黃色、灰滾邊圓領、右肩灰黑條紋、左胸精確校徽與長方形名牌布標、灰底黃條運動短褲
-      studentUniform = `MANDATORY STUDENT ATTIRE: Surrounding elementary students must wear Chiayi Minzhu Elementary sports uniform: bright warm-yellow short-sleeve shirt with grey crew-neck collar, vertical grey and black racing stripes on the right shoulder/chest, left chest printed with the ${minzhuSchoolCrest} and a rectangular student ID number badge sewn right above it, paired with athletic grey shorts featuring bold yellow side stripes.`;
+      studentUniform = `STUDENT ATTIRE: Foreground elementary students wear yellow sports shirts with grey crew-neck and grey shoulder stripe, ${minzhuBadgeDesc}, and grey shorts with yellow stripes.`;
     } else {
-      // 制服：純白短袖Polo、純白袖子、寶藍翻領帶紅白細紋、左胸口袋繡精確校徽、口袋上方縫名牌布標、深藍下身
-      studentUniform = `MANDATORY STUDENT ATTIRE: Surrounding elementary students must wear Chiayi Minzhu Elementary uniform: crisp white short-sleeve polo shirt with plain white sleeves, royal-blue turn-down collar with fine red and white pinstripes along the collar edge, a left chest patch pocket embroidered with the ${minzhuSchoolCrest}, a rectangular student ID number badge sewn cleanly right above the pocket, paired with dark navy-blue school uniform pants.`;
+      studentUniform = `STUDENT ATTIRE: Foreground seated elementary students wear white short-sleeve polo shirts with royal-blue turn-down collar, ${minzhuBadgeDesc}, and navy pants.`;
     }
 
-    // 2. 教室實景（大屏嵌於黑板中央、傳統木課桌椅、綠切割墊、吊扇、磨石子地）
-    if (p.includes("教室") || p.includes("講台") || p.includes("黑板") || p.includes("上課")) {
-      p = "an authentic Taiwanese elementary school classroom: front wall features a large electronic smart interactive display screen embedded directly in the center of a wide dark green chalkboard with chalk notes, wooden ceiling fans overhead, neat rows of traditional light-brown wooden student desks and wooden chairs, green desk pads on student tables, backpacks hanging on desk sides, and classic grey terrazzo tiled floor";
+    // 2. 鏡頭視角與空間鎖定（強制以學生第一人稱視角看講台）
+    if (p.includes("教室") || p.includes("講台") || p.includes("黑板") || p.includes("上課") || a.includes("聯絡簿")) {
+      p = "CAMERA PERSPECTIVE: Shot from the student's point-of-view (POV) in the classroom, looking forward toward the teacher at the front stage. In the background behind the teacher is a wide dark-green chalkboard with chalk notes, a large electronic interactive smart display screen built right in the center of the chalkboard, ceiling fans above, wooden podium, and tidy rows of wooden student desks with green desk pads in the lower foreground";
     } else if (p.includes("遊樂") || p.includes("溜滑梯") || p.includes("單槓") || p.includes("遊戲場")) {
-      p = "an inclusive campus playground with a unique curved sky-blue climbing dome with circular holes, a woven circular bird's nest swing under a blue-and-green wavy shade canopy, green rubber safety tiles with painted 'JUMP' measurement markers, and lush trees";
+      p = "an inclusive campus playground with a signature curved sky-blue climbing dome with circular cutout holes, blue-green wavy shade canopy overhead, green safety tiles with painted 'JUMP' markers, and trees";
     } else if (p.includes("走廊") || p.includes("洗手台")) {
-      p = "an authentic Taiwanese elementary school outdoor hallway with warm yellow square wall tiles, a vintage slatted wooden bench with green potted plants beside it, large glass windows, and open-air corridors";
-    } else if (p.includes("穿堂") || p.includes("校門") || p.includes("中庭")) {
-      p = "a spacious Taiwanese campus open-air courtyard and atrium featuring classic grey washed-pebble (granite grit) circular pillars, elegant semi-circular archways, layered multi-story architectural curves, and an open central green lawn";
-    } else if (p.includes("草坪") || p.includes("草地") || p.includes("花圃")) {
-      p = "a lush green campus courtyard lawn featuring iconic stone ape sculptures, colorful silhouette art statues of running kids, and background school buildings with arched windows and yellow-accent balconies";
+      p = "an authentic Taiwanese school outdoor corridor with warm yellow square tiles, vintage slatted wooden bench with green potted plants, and open-air hallway";
+    } else if (p.includes("穿堂") || p.includes("校門") || p.includes("中庭") || p.includes("草坪")) {
+      p = "a spacious Taiwanese campus open courtyard featuring signature grey washed-stone round pillars, archways, and open green lawn";
     }
 
-    // 3. 作業與聯絡簿
-    if (p.includes("辦公桌") || a.includes("聯絡簿") || a.includes("作業") || a.includes("生字")) {
-      a = a.replace(/聯絡簿|作業|生字本/g, "open student homework exercise notebooks with red pen corrections and cute star grading stamps");
+    // 3. 修正聯絡簿站位（絕對站在講台前，不坐在學生座位）
+    if (a.includes("聯絡簿") || a.includes("黑板") || a.includes("大螢幕") || a.includes("抄寫")) {
+      a = "standing elegantly at the front classroom podium next to the chalkboard, holding chalk and pointing at the daily assignment tasks on the board, speaking warmly to the students";
+    } else if (a.includes("指導") || a.includes("解答") || a.includes("身邊") || a.includes("作業")) {
+      a = "patiently bending down beside a wooden student desk, eyes gently looking directly at the open exercise notebook, guiding the student with a warm encouraging smile";
+    } else if (a.includes("辦公")) {
+      a = "sitting at the teacher's office desk with a red pen in hand, focused intently down grading open student notebooks";
     }
 
-    // 4. 視線與動作聚焦
-    let gazeConstraint = "";
-    if (a.includes("指導") || a.includes("解答") || a.includes("看著") || a.includes("身邊") || a.includes("回答") || a.includes("聊天") || a.includes("擊掌")) {
-      gazeConstraint = "eye contact locked attentively onto the young elementary students, head tilted gently downward, engaging with genuine warmth";
-    } else if (a.includes("批改") || a.includes("備課") || a.includes("寫")) {
-      gazeConstraint = "eyes focused intently down on the open notebook on the wooden desk, holding a red grading pen";
-    } else if (a.includes("大螢幕") || a.includes("黑板") || a.includes("講台")) {
-      gazeConstraint = "standing proudly at the front wooden podium near the smart screen, gesturing toward the digital screen while smiling warmly at students";
-    } else {
-      gazeConstraint = "natural candid warm eye expression, interacting authentically with surrounding school children";
-    }
+    // 4. 視線自然注視學生
+    const gazeConstraint = "eyes engaging warmly with natural eye contact, radiating confidence and genuine care for students";
 
     return { place: p, action: a, gaze: gazeConstraint, uniform: studentUniform };
   }
 
-  // 提示詞組裝（強化人像極致還原）
+  // 提示詞組裝（強化主角光環、神韻還原、帥氣美麗美化、學生視角）
   function generatePromptClientSide() {
-    const baseCharacter = `STRICT PHOTOREALISTIC IDENTITY LOCK: Maintain the EXACT facial likeness, recognizable facial structure, authentic age, eye shape, nose, mouth, haircut, and genuine smile of the real teacher shown in the uploaded reference photo. Render the teacher with precise portrait fidelity to the original person. STRICT NEGATIVE CONSTRAINT: DO NOT change the teacher's face into a generic cartoon face; DO NOT ADD EYEGLASSES unless explicitly worn in the reference photo; strictly preserve the natural face and true physical likeness without alterations.`;
+    const baseCharacter = `HERO SUBJECT FOCUS & STRICT IDENTITY LOCK: The main hero is the elementary school teacher. Maintain the EXACT recognizable facial likeness, facial bone structure, true haircut, age, and natural smile directly from the uploaded reference photo person. NATURAL BEAUTY ENHANCEMENT: Render the teacher in a tasteful, highly flattering, charismatic, and handsome/beautiful portrait style with clean radiant skin and charming aura, while keeping their genuine authentic facial identity perfectly recognizable (STRICTLY NO UGLY DISTORTIONS, DO NOT ADD GLASSES unless worn in the reference photo).`;
 
     let formatDesc = (currentPanelCount === 1) 
-      ? "A single heartwarming story snapshot capturing a day in the life of this teacher:"
-      : `A clean ${currentPanelCount}-panel sequential storyboard comic sequence capturing a day in the life of this teacher:`;
+      ? "A cinematic story snapshot seen from the students' perspective looking up to their beloved teacher:"
+      : `A clean ${currentPanelCount}-panel sequential comic strip layout from the students' perspective, highlighting the teacher's day:`;
 
     let sceneDescriptions = [];
     for (let i = 1; i <= currentPanelCount; i++) {
@@ -289,11 +305,11 @@
       const clean = sanitizeScenePrompt(rawPlace, rawAction, quote);
 
       sceneDescriptions.push(
-        `Panel ${i}: Setting is ${clean.place}. The teacher is actively ${clean.action}. Facial expression and composition: ${clean.gaze}, portraying the caring message: "${quote}". ${clean.uniform}`
+        `Panel ${i}: Setting: ${clean.place}. The teacher is the central focus, ${clean.action}. Facial expression: ${clean.gaze}, conveying the warm sentiment: "${quote}". ${clean.uniform}`
       );
     }
 
-    const styleTail = `Authentic Taiwanese campus environment, soft warm natural morning sunlight, 3D animated cinematic storybook aesthetic, high dynamic range, ultra-detailed skin textures, lifelike eyes, rich architectural details, 8k resolution, perfect human anatomy and hands.`;
+    const styleTail = `Shot from student POV, warm natural morning classroom lighting, 3D animated cinematic storybook aesthetic, high dynamic range, crisp sharp focus on the teacher, rich Taiwanese school architectural details, 8k resolution, perfect hands and anatomy.`;
 
     const finalPrompt = `${baseCharacter} ${formatDesc} ${sceneDescriptions.join(' ')} ${styleTail}`;
     
