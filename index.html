@@ -643,18 +643,51 @@
 
   // ================= 提示詞核心建構引擎 =================
 
-  // 精準場景轉換 (英語提示詞)
-  function translateSettingAndPOV(place, action, isSports) {
+  // 精準場景轉換 (英語提示詞) - 依動作情境動態生成黑板筆跡、智慧大屏、全木課桌椅
+  function translateSettingAndPOV(place, action, quote, isSports) {
     let settingEn = "";
 
+    // 1. 動態黑板與大屏生成（依動作情境細膩客製，徹底告別空黑板與黑屏）
+    let chalkboardContentEn = "";
+    let smartDisplayContentEn = "";
+
+    if (action.includes("大螢幕") || action.includes("平板") || action.includes("展示") || action.includes("創意")) {
+      smartDisplayContentEn = "Mounted seamlessly in the center of the dark-green chalkboard is a large interactive digital smart display touchscreen that is ACTIVELY POWERED ON, illuminated, and vividly displaying colorful multimedia educational slides with creative charts, digital mind-maps, and vibrant lesson visuals. ";
+      chalkboardContentEn = "On the dark-green chalkboard flanking the screen are neat handwritten chalk lesson titles, structured flowchart branches in white and yellow chalk, and playful chalk star doodles. ";
+    } else if (action.includes("聯絡簿") || action.includes("抄寫") || action.includes("黑板") || action.includes("早自習")) {
+      chalkboardContentEn = "On the dark-green chalkboard, authentic handwritten white and yellow chalk Chinese text neatly displays today's date and homework agenda [9月28日 教師節快樂！今日任務：1. 聯絡簿抄寫整齊 2. 數學習作 P.20]，accompanied by cute small chalk-drawn flower and smiley face doodles in the corner. ";
+      smartDisplayContentEn = "The central interactive touchscreen smart display embedded in the blackboard is actively powered on, glowing softly with a cheerful morning sunrise classroom welcome wallpaper. ";
+    } else if (action.includes("自然") || action.includes("實驗") || action.includes("科學") || action.includes("顯微鏡")) {
+      chalkboardContentEn = "On the dark-green chalkboard are detailed hand-drawn chalk diagrams of botanical leaf structures and scientific observation steps with neat white and green chalk arrows. ";
+      smartDisplayContentEn = "The central digital smart display screen is actively illuminated, displaying a high-resolution vivid microscopic image of plant cell structures in bright emerald green. ";
+    } else if (action.includes("數學") || action.includes("算") || action.includes("解答") || action.includes("指導")) {
+      chalkboardContentEn = "The dark-green chalkboard is neatly filled with step-by-step arithmetic equations, geometric shape diagrams (triangles and circles) drawn with chalk, and key calculation steps highlighted in bright yellow chalk. ";
+      smartDisplayContentEn = "The central smart display touchscreen is powered on, showing an interactive colorful 3D geometric puzzle slide. ";
+    } else if (action.includes("音樂") || action.includes("歌") || action.includes("鋼琴") || action.includes("律動")) {
+      chalkboardContentEn = "Drawn on the chalkboard with chalk are musical staves, treble clefs, cheerful quarter notes, and song lyrics written in neat Chinese characters. ";
+      smartDisplayContentEn = "The central smart screen is powered on, actively displaying colorful animated sheet music and rhythm guides. ";
+    } else if (action.includes("美術") || action.includes("水彩") || action.includes("畫") || action.includes("調色")) {
+      chalkboardContentEn = "Pinned across the chalkboard are vibrant student watercolor paintings, alongside chalk color-wheel circles and pastel sketch guides. ";
+      smartDisplayContentEn = "The central smart display is brightly lit with high-definition impressionist painting masterpieces. ";
+    } else if (action.includes("放學") || action.includes("打掃") || action.includes("道別") || action.includes("揮手")) {
+      chalkboardContentEn = "On the clean chalkboard, large warm chalk calligraphy reads: [放學路上小心，大家明天見！❤️] alongside reminders to pack schoolbags neatly. ";
+      smartDisplayContentEn = "The central smart display screen displays a warm campus sunset farewell slide. ";
+    } else {
+      chalkboardContentEn = "On the dark-green chalkboard, authentic handwritten Chinese lesson bullet points and warm classroom announcements are written in neat white and pastel chalk. ";
+      smartDisplayContentEn = "Mounted in the center of the chalkboard is an interactive digital smart display touchscreen that is actively powered on, illuminated, and displaying colorful educational lesson slides. ";
+    }
+
+    // 2. 傳統台灣小學 100% 全實木課桌椅（徹底排除任何金屬鐵件）
+    const allWoodDesksEn = "CLASSROOM FURNITURE DETAIL: All student desks and matching wooden chairs are authentic Taiwanese elementary school 100% solid natural light-brown wood (purely solid wooden planks with warm natural woodgrain, classic solid wooden classroom desks and matching wooden chairs, strictly ZERO metal desk legs, NO steel tubing, NO iron brackets, NO plastic chairs). ";
+
     if (place.includes("教室") || place.includes("黑板") || place.includes("講台")) {
-      settingEn = "a warm, brightly lit Taiwanese elementary school classroom. In the background behind the teacher is a large dark-green chalkboard filled with chalk notes, an interactive electronic smartboard display embedded in the center, and vintage wooden wall clocks";
+      settingEn = `a warm, brightly lit authentic Taiwanese elementary school classroom. In the background behind the teacher is the full blackboard wall: ${smartDisplayContentEn}${chalkboardContentEn}Warm sunlight streams through large open classroom windows. ${allWoodDesksEn}`;
     } else if (place.includes("自然") || place.includes("實驗")) {
-      settingEn = "a specialized elementary science laboratory room, featuring clean white lab tables, neat glass beakers, test tubes, and biology charts in the background";
+      settingEn = `a specialized elementary science laboratory room, featuring clean white lab tables, neat glass beakers, test tubes, and biology charts in the background. ${smartDisplayContentEn}${chalkboardContentEn}`;
     } else if (place.includes("美術") || place.includes("工藝")) {
-      settingEn = "a vibrant art classroom with wooden easels, colorful paint supplies, drying racks, and cheerful student artwork decorating the walls";
+      settingEn = `a vibrant art classroom with wooden easels, colorful paint supplies, drying racks, and cheerful student artwork decorating the walls. ${chalkboardContentEn}`;
     } else if (place.includes("音樂") || place.includes("律動")) {
-      settingEn = "a spacious school music classroom with an upright piano, music stands, wooden floor, and musical note posters";
+      settingEn = `a spacious school music classroom with an upright piano, music stands, polished wooden floor, and musical note posters. ${chalkboardContentEn}`;
     } else if (place.includes("圖書")) {
       settingEn = "a cozy school library reading zone with low wooden bookshelves filled with books, colorful reading cushions, and sunlight streaming through windows";
     } else if (place.includes("操場") || place.includes("跑道")) {
@@ -672,7 +705,7 @@
     } else if (place.includes("辦公室")) {
       settingEn = "a neat elementary school faculty teacher office, with organized stacks of student homework notebooks, stationery caddy, red pens, and personal desk plants";
     } else {
-      settingEn = `an authentic Taiwanese elementary school campus setting (${place})`;
+      settingEn = `an authentic Taiwanese elementary school campus setting (${place}). ${allWoodDesksEn}`;
     }
 
     // 嚴格遵守「學生第一人稱/過肩視角」與「背影純色零校徽」及「深藍色褲子/褲裙」
@@ -681,8 +714,8 @@
       // 體育服背部：純亮黃色，無任何印花、文字或校徽
       povAndForegroundUniform = `CAMERA ANGLE: Authentic student first-person over-the-shoulder POV (from the eye-level of a student). In the soft blurred lower foreground are the backs of elementary classmates. These foreground classmates wear clean solid canary-yellow short-sleeve sports t-shirts with grey shoulder panels; CRITICAL CLOTHING DETAIL: their shirt backs are seamless, blank plain solid bright yellow fabric with zero graphics or emblems, completely plain solid bright yellow backs; they wear grey athletic shorts with yellow side stripes. The camera looks directly across them toward the teacher.`;
     } else {
-      // 制服背部：純白色，無任何印花、文字或校徽；下身為深藍色長褲或深藍色褲裙
-      povAndForegroundUniform = `CAMERA ANGLE: Authentic student first-person over-the-shoulder POV (from the eye-level of a seated student at a desk). In the soft blurred lower foreground are the backs of seated classmates. These foreground classmates wear clean solid pure white short-sleeve polo shirts with royal-blue collars; CRITICAL CLOTHING DETAIL: their shirt backs are unadorned, seamless plain solid white fabric with zero graphics or emblems, completely plain solid white backs; they wear navy blue school trousers or navy blue pleated skorts/culottes. The camera looks directly past them toward the teacher at the front.`;
+      // 制服背部：純白色，無任何印花、文字或校徽；下身為深藍色長褲或深藍色褲裙；桌椅為全實木
+      povAndForegroundUniform = `CAMERA ANGLE: Authentic student first-person over-the-shoulder POV (from the eye-level of a seated student at a 100% solid all-wood desk). In the soft blurred lower foreground are the backs of seated classmates at their all-wooden desks. These foreground classmates wear clean solid pure white short-sleeve polo shirts with royal-blue collars; CRITICAL CLOTHING DETAIL: their shirt backs are unadorned, seamless plain solid white fabric with zero graphics or emblems, completely plain solid white backs; they wear navy blue school trousers or navy blue pleated skorts/culottes. The camera looks directly past them toward the teacher at the front.`;
     }
 
     return { settingEn, povAndForegroundUniform };
@@ -767,7 +800,7 @@
       else if (attireRadio === "uniform") isSports = false;
       else isSports = detectIsSportsScene(placeVal, actionVal);
 
-      const trans = translateSettingAndPOV(placeVal, actionVal, isSports);
+      const trans = translateSettingAndPOV(placeVal, actionVal, quoteVal, isSports);
       const actionEn = translateTeacherAction(actionVal);
 
       sceneData.push({
@@ -787,8 +820,8 @@
 
     const artStyleBase = `ART STYLE: High-end 3D animated cinematic storybook aesthetic (Pixar/Disney/Makoto Shinkai blend), soft warm morning classroom lighting, shallow depth of field focusing sharply on the teacher, rich architectural school details, 8k resolution, photorealistic fabric textures, anatomically perfect hands and eyes.`;
 
-    // 共通嚴格排除項目（背部零文字/零校徽、手部畸變）
-    const standardNegativeText = `back print, logo on back, badge on back, crest on back of shirt, emblem on back, rear graphic, text on back, backwards logo, ugly, deformed hands, extra fingers, distorted face, blurry, watermark, low quality, oversaturated`;
+    // 共通嚴格排除項目（背部零文字/零校徽、課桌椅排除鐵件、手部畸變、關閉的黑屏、空黑板）
+    const standardNegativeText = `metal desk legs, steel tubing, iron desk frames, metal furniture legs, modern plastic chairs, turned-off black screen, blank empty chalkboard, back print, logo on back, badge on back, crest on back of shirt, emblem on back, rear graphic, text on back, backwards logo, ugly, deformed hands, extra fingers, distorted face, blurry, watermark, low quality, oversaturated`;
 
     let finalPromptText = "";
     let finalNegativeText = standardNegativeText;
@@ -803,12 +836,30 @@
         finalPromptText = `${heroIdentityBase} ${s.povEn} Setting: ${s.settingEn}. The teacher is the sharp focal point, ${s.actionEn}. ${speechInstruction} ${artStyleBase} --cref [請在此貼上老師照片的公開網址] --cw 100 --ar 16:9 --style raw --v 6.1 --no ${standardNegativeText}`;
         finalNegativeText = `--no ${standardNegativeText}`;
       } else if (platform === 'chatgpt') {
-        finalPromptText = `Please generate an image based on the uploaded reference photo of the teacher:\n\n${heroIdentityBase}\n\n${s.povEn}\n\nSetting: ${s.settingEn}.\nThe teacher is the main focal character, ${s.actionEn}. ${speechInstruction}\n\n${artStyleBase}\n\nCRITICAL CONSTRAINTS: All foreground student classmates seen from behind MUST have completely blank, solid plain backs with zero logos, text, or badges on their shirts. Students wear navy blue trousers or navy blue pleated skorts/culottes. Keep the teacher's face recognizable and faithful to the reference photo.`;
+        finalPromptText = `Please generate an image based on the uploaded reference photo of the teacher:\n\n${heroIdentityBase}\n\n${s.povEn}\n\nSetting: ${s.settingEn}.\nThe teacher is the main focal character, ${s.actionEn}. ${speechInstruction}\n\n${artStyleBase}\n\nCRITICAL CONSTRAINTS:\n1. All foreground student desks and matching chairs MUST be 100% solid natural wood (classic Taiwanese elementary school desks), strictly NO metal legs, NO steel pipes, NO iron furniture parts.\n2. The chalkboard must feature realistic handwritten chalk Chinese notes and lesson sketches matching the scene context.\n3. The central interactive smart display screen on the chalkboard must be actively powered on, illuminated, and displaying vibrant educational slides.\n4. All foreground student classmates seen from behind MUST have completely blank, solid plain backs with zero logos, text, or badges on their shirts. Students wear navy blue trousers or navy blue pleated skorts/culottes. Keep the teacher's face recognizable and faithful to the reference photo.`;
       } else if (platform === 'flux') {
-        finalPromptText = `${heroIdentityBase}, ${s.povEn}, setting: ${s.settingEn}, the teacher is the central focus: ${s.actionEn}, ${speechInstruction}, ${artStyleBase}, clean solid unprinted shirt backs on foreground students, navy blue trousers or skorts`;
+        finalPromptText = `${heroIdentityBase}, ${s.povEn}, setting: ${s.settingEn}, the teacher is the central focus: ${s.actionEn}, ${speechInstruction}, ${artStyleBase}, 100% solid natural wood desks without metal, active illuminated smart screen, clean solid unprinted shirt backs on foreground students, navy blue trousers or skorts`;
       } else {
-        // Google Gemini（已移除「請上傳...」前綴，直接提供純淨生圖提示詞）
-        finalPromptText = `以所附的老師照片為主角基準，繪製一張教師節專屬高畫質溫馨插畫：\n\n1. 主角鎖定 (Hero Lock)：${heroIdentityBase}\n2. 視角與構圖 (POV & Foreground)：${s.povEn}\n3. 場景設定 (Setting)：${s.settingEn}\n4. 老師動作與神態 (Teacher Action)：${s.actionEn} ${speechInstruction}\n5. 藝術風格 (Art Style)：${artStyleBase}\n\n⚠️ 嚴格約束 (Strict Constraints)：前景以學生過肩視角呈現，看得到台下同學的背部與肩膀；請注意，同學背面的衣服必須是乾淨素色的「純白（制服）」或「純亮黃色（體育服）」，背面絕對不得出現任何校徽、文字、印刷圖樣或標誌！學生下身穿著深藍色長褲或深藍色褲裙。請忠實還原照片中老師的五官神情與招牌笑容。`;
+        // Google Gemini（全面對齊高階情境敘事結構，明確要求 100% 全實木課桌椅、發光大屏、相符黑板板書，達到與 ChatGPT 相同乃至更佳的生圖效果）
+        finalPromptText = `Please generate an authentic, highly detailed cinematic illustration based on the uploaded teacher reference photo:
+
+${heroIdentityBase}
+
+${s.povEn}
+
+ENVIRONMENT & DETAILED CLASSROOM SETTING:
+${s.settingEn}
+
+TEACHER ACTION & WARM EXPRESSION:
+The teacher is the central charismatic hero of the scene: ${s.actionEn}. ${speechInstruction}
+
+${artStyleBase}
+
+MANDATORY DETAIL SPECIFICATIONS:
+1. DESKS & CHAIRS: All student desks and matching chairs MUST be 100% solid natural wood (classic Taiwanese elementary all-wooden school desks), strictly NO metal legs, NO steel pipes, NO iron furniture parts.
+2. BLACKBOARD CONTENT: The dark-green chalkboard MUST feature realistic, authentic handwritten chalk Chinese notes, daily tasks, and lesson sketches matching the scene context, written in crisp white and colored chalk.
+3. SMART DISPLAY SCREEN: The large interactive digital smart display in the center of the chalkboard MUST be actively powered on, illuminated, and vividly displaying colorful educational lesson slides (NOT a blank or turned-off black screen).
+4. FOREGROUND STUDENTS: Viewed strictly from behind in over-the-shoulder POV, seated at their all-wood desks, wearing plain solid white uniform backs (or plain solid bright yellow sports shirts) with ZERO logos, text, or badges on the back. Bottoms are navy blue trousers or pleated skorts. Keep the teacher's authentic face and warm smile recognizable from the reference photo.`;
       }
 
     } else {
@@ -821,10 +872,22 @@
         finalPromptText = `A clean sequential ${currentPanelCount}-panel story comic strip from students' first-person POV. ${heroIdentityBase} ${panelsEn} ${artStyleBase} --cref [請在此貼上老師照片網址] --cw 100 --ar 16:9 --style raw --v 6.1 --no ${standardNegativeText}`;
         finalNegativeText = `--no ${standardNegativeText}`;
       } else if (platform === 'chatgpt') {
-        finalPromptText = `Create a cohesive ${currentPanelCount}-panel sequential comic strip layout based on the uploaded teacher photo:\n${heroIdentityBase}\n${panelsEn}\n${artStyleBase}\nMandatory: All student shirts seen from behind must have completely blank, solid plain backs with zero logos or emblems. Students wear navy blue trousers or skorts. Keep teacher face consistent across all panels.`;
+        finalPromptText = `Create a cohesive ${currentPanelCount}-panel sequential comic strip layout based on the uploaded teacher photo:\n${heroIdentityBase}\n${panelsEn}\n${artStyleBase}\nMandatory: All student desks are 100% solid natural wood without metal parts. Chalkboards feature authentic handwritten lesson notes and actively glowing smart screens. All student shirts seen from behind must have completely blank, solid plain backs with zero logos or emblems. Students wear navy blue trousers or skorts. Keep teacher face consistent across all panels.`;
       } else {
-        // Google Gemini 多格模式（已移除「請上傳...」前綴）
-        finalPromptText = `請根據所提供的老師照片，以一致的人物神韻生成一張 ${currentPanelCount} 格連環畫分鏡（Comic Strip）：\n${heroIdentityBase}\n\n分鏡內容：\n${panelsEn}\n\n風格與要求：${artStyleBase}。前景學生背影一律為乾淨純色（制服純白、體育服純黃，下身穿深藍色長褲或深藍色褲裙），背部禁止任何校徽或印刷圖樣。`;
+        // Google Gemini 多格漫畫模式
+        finalPromptText = `Please create a cohesive, authentic ${currentPanelCount}-panel sequential comic strip layout based on the uploaded teacher reference photo:
+
+${heroIdentityBase}
+
+${panelsEn}
+
+${artStyleBase}
+
+MANDATORY SPECIFICATIONS:
+1. All student desks and chairs are 100% solid natural wood without any metal legs or steel parts.
+2. Chalkboards have authentic handwritten chalk notes and lesson diagrams matching each panel's context; the embedded smart display screen is actively powered on and illuminated with colorful lesson slides.
+3. All foreground student shirts seen from behind have completely blank, solid plain backs (pure white for uniforms, pure bright yellow for sports shirts) with zero logos, text, or emblems. Students wear navy blue trousers or pleated skorts.
+4. Keep the teacher's authentic face and recognizable features consistent across all panels.`;
       }
     }
 
